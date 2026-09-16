@@ -1,0 +1,6 @@
+{
+  "extends": "../../tui/tsconfig.json",
+  "compilerOptions": { "rootDir": "../..", "outDir": "lib", "declaration": true },
+  "include": ["src/**/*.ts"],
+  "exclude": ["lib", "node_modules"]
+}

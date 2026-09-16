@@ -1,0 +1,10 @@
+**/node_modules
+**/test
+**/.DS_Store
+**/.credentials.yaml
+**/*.env
+**/config.json
+**/remote.json
+**/npm-debug.log
+**/.npmrc
+**/.git

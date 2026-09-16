@@ -1,0 +1,28 @@
+{
+  "name": "personal-dsh-tui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Local terminal client (phase 1) for the personal DSH workspace: ACP stdio runtime adapter, sessions, transcript, cancel, permissions.",
+  "engines": {
+    "node": ">=22.20.0"
+  },
+  "bin": {
+    "dsh-tui": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/cli.js",
+    "test": "tsc -p tsconfig.json && node --test --test-timeout=15000 test/*.test.ts",
+    "check": "npm test",
+    "demo": "node dist/cli.js --demo"
+  },
+  "dependencies": {
+    "@agentclientprotocol/sdk": "1.4.0",
+    "@deepseek-ai/dsh": "0.1.5-rc.1"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "typescript": "5.9.3"
+  }
+}

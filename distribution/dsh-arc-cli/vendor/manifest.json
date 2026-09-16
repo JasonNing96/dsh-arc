@@ -1,0 +1,22 @@
+{
+  "version": "1.0.0",
+  "upstreamTuiSourceSha256": "7f06ce84e816b9f2a226c8ff5ae73a6739b79c92f95d55bd4e2b2b6b26b0bee0",
+  "packages": [
+    {
+      "file": "dsh-arc-1.0.0.tgz",
+      "sha256": "a97ad788bb3d8d0f4df61d6749e20f9dc19052c5e524c16b5fe2e77b3a1e0174"
+    },
+    {
+      "file": "dsh-arc-acp-1.0.0.tgz",
+      "sha256": "d06d5465d40a0005c49a507629ee3e1e7f3a8f87f091236bcd09096db910fb3e"
+    },
+    {
+      "file": "dsh-arc-execution-1.0.0.tgz",
+      "sha256": "93c964784d682c32451a035d94d04f2752b378d3ff46d95523edef2a73968aeb"
+    },
+    {
+      "file": "dsh-tui-0.10.1-arc.1.0.0.tgz",
+      "sha256": "5d63e32ba0674e0a6f806d7747e2e5ef0feecb7dd5a124501ef327e85ae27d41"
+    }
+  ]
+}

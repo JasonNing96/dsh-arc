@@ -1,0 +1,13 @@
+# Install after the standard ACP app bundle. Removing this bundle restores it.
+- id: acp
+  disabled: true
+- insert:
+    - id: arc-acp
+      name: dsh-arc/acp
+      inject: [acpAppStartup, loader]
+      config: !!js >-
+        (() => {
+          const original = [...ctx.loader.entries()].find(entry => entry.options.id === 'acp')
+          if (!original) throw new Error('dsh-arc-acp requires a standard ACP profile')
+          return original.options.config ?? {}
+        })()

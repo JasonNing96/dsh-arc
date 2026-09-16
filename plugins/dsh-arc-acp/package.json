@@ -1,0 +1,19 @@
+{
+  "name": "dsh-arc-acp",
+  "version": "1.0.0",
+  "description": "Reversible ACP surface composition for dsh-arc",
+  "files": [
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "dsh-arc": "1.0.0"
+  },
+  "license": "MIT"
+}

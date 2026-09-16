@@ -1,0 +1,9 @@
+node_modules/
+lib/
+dist/
+artifacts/
+__pycache__/
+.DS_Store
+.env
+*.env
+.credentials.yaml

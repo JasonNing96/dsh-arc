@@ -1,0 +1,8 @@
+- insert:
+    - id: arc-execution
+      name: dsh-arc-execution
+      inject: [tuiSessionExecution, tuiShortcuts]
+- id: dsh-tui
+  inject: [arcExecutionReady, workspaceRegistry, agents, tuiWorkspaces, tuiScenes, tuiDialogs, tuiStatus, tuiShortcuts, tuiRenderers, tuiThemes]
+  config:
+    driverId: arc

@@ -1,0 +1,1418 @@
+diff --git a/package.json b/package.json
+index 277f4360101f271507093837d936ea5ca5ac65c7..bddb228ef56885a69384ca45387a46193e60a0ae 100644
+--- a/package.json
++++ b/package.json
+@@ -49,6 +49,10 @@
+       "types": "./lib/types/index.d.ts",
+       "import": "./lib/types/index.js"
+     },
++    "./session-execution": {
++      "types": "./lib/types/dsh-adapter/session-execution.d.ts",
++      "import": "./lib/types/dsh-adapter/session-execution.js"
++    },
+     "./working-activity": {
+       "types": "./lib/types/working-activity.d.ts",
+       "import": "./lib/types/working-activity.js"
+diff --git a/scripts/verify-adapter-shadow.ts b/scripts/verify-adapter-shadow.ts
+index f947d0d552557d3b512680d6aced0ad452e0fde7..13965fe73d2a91d6fb997db0cadd6eb9707fd789 100644
+--- a/scripts/verify-adapter-shadow.ts
++++ b/scripts/verify-adapter-shadow.ts
+@@ -172,6 +172,9 @@ const METHOD_POLICY: Record<string, Record<string, MethodPolicy>> = {
+   TuiEffectLedgerRuntime: {
+     record: { kind: 'capability', capability: 'host.ledger.record', guard: 'kernel' },
+   },
++  TuiSessionExecutionRuntime: {
++    register: { kind: 'capability', capability: 'host.execution.register' },
++  },
+ }
+ 
+ /**
+@@ -196,6 +199,7 @@ const NON_SERVICE_POLICY: Readonly<Record<string, {
+     default: { kind: 'exempt', reason: 'internal TUI approval store; not an adapter capability entry; park() is the guarded host.presentation.approve entry point' },
+     overrides: Object.freeze({
+       park: { kind: 'capability', capability: 'host.presentation.approve' },
++      parkExternal: { kind: 'capability', capability: 'host.presentation.approve' },
+     }),
+   }),
+   TuiDialogStore: Object.freeze({
+diff --git a/src/adapter/kernel/runtime.ts b/src/adapter/kernel/runtime.ts
+index faddd761179bd074873cda6f827ee31afe10abd5..e58e055d9b77c3ee01cbd64634274c011876c50c 100644
+--- a/src/adapter/kernel/runtime.ts
++++ b/src/adapter/kernel/runtime.ts
+@@ -107,6 +107,9 @@ export const ADAPTER_CAPABILITY_EFFECT_CLASSES: Readonly<Record<string, HostEffe
+   'host.channel.plugins.close-scene': 'mutate',
+   'host.channel.plugins.settings-sections': 'read-only',
+   'host.channel.plugins.subscribe-settings-sections': 'subscribe',
++  'host.execution.register': 'register',
++  'host.execution.acquire': 'mutate',
++  'host.execution.invoke': 'mutate',
+ })
+ 
+ 
+@@ -189,6 +192,9 @@ export const ADAPTER_CAPABILITY_SLICES: Readonly<Record<string, string>> = Objec
+   'host.channel.plugins.close-scene': 'channel',
+   'host.channel.plugins.settings-sections': 'channel',
+   'host.channel.plugins.subscribe-settings-sections': 'channel',
++  'host.execution.register': 'execution',
++  'host.execution.acquire': 'execution',
++  'host.execution.invoke': 'execution',
+ })
+ 
+ export function sliceForCapability(capability: string): string | undefined {
+diff --git a/src/adapter/ports/channel-ui.ts b/src/adapter/ports/channel-ui.ts
+index bdea0bec120d41a573d484105c3b6082f75653e2..40dd1a4152846ab67478ace0fce82244ac830451 100644
+--- a/src/adapter/ports/channel-ui.ts
++++ b/src/adapter/ports/channel-ui.ts
+@@ -257,12 +257,13 @@ export interface ChannelUi {
+    *  BEFORE reading bytes (a Finder path is untrusted input). Undefined
+    *  when the composition has no attachment service. */
+   stagedImageLimits(): { readonly maxImageBytes: number; readonly maxImagesPerMessage: number } | undefined
+-  submit(text: string, images?: readonly ComposerImageRef[]): void
++  /** A driver may reject before delivery; `false` preserves the composer draft. */
++  submit(text: string, images?: readonly ComposerImageRef[]): void | boolean
+   /**
+    * Steer a message into the running turn (Codex/pi semantics): injected at
+    * the next step boundary, the agent continues without aborting.
+    */
+-  steer(text: string, images?: readonly ComposerImageRef[]): void
++  steer(text: string, images?: readonly ComposerImageRef[]): void | boolean
+   /** Pull a pending message back out of the inbox (Alt+Up) for re-editing. */
+   removePending(id: string): boolean
+   /** Abort the in-flight turn (`Ctrl+C` while working). While `cancelPending`
+diff --git a/src/components/PromptInput.tsx b/src/components/PromptInput.tsx
+index c87079594fd9719edf740ae54ade890d9db56bea..e6ae67c34fbe4e504c32625b30472b9a5ef099e5 100644
+--- a/src/components/PromptInput.tsx
++++ b/src/components/PromptInput.tsx
+@@ -1,3 +1,4 @@
++import { SessionComposerContext } from './session-composer.js'
+ import React from 'react'
+ import stripAnsi from 'strip-ansi'
+ import { constants as fsConstants } from 'node:fs'
+@@ -506,8 +507,9 @@ export function PromptInput({
+   // Raw stdout writer for OSC 52 clipboard writes (selection copy) — must
+   // bypass the frame pipeline; null outside a mounted Ink App.
+   const writeRaw = React.useContext(TerminalWriteContext)
+-  const [value, setValue] = React.useState('')
+-  const [cursor, setCursor] = React.useState(0)
++  const sessionComposer = React.useContext(SessionComposerContext)
++  const [value, setValue] = React.useState(() => sanitizeEditableText(sessionComposer?.initialText() ?? ''))
++  const [cursor, setCursor] = React.useState(value.length)
+   /**
+    * Mouse text selection: UTF-16 offsets [start, end) in `value`, snapped
+    * to grapheme boundaries, start ≤ end. Null = no selection. Created by
+@@ -737,6 +739,7 @@ export function PromptInput({
+         setExpanded(false)
+         setValue('')
+         setCursor(0)
++        sessionComposer?.changed('')
+       },
+       append: (text: string) => {
+         const previous = valueRef.current
+@@ -746,6 +749,7 @@ export function PromptInput({
+         cursorRef.current = next.length
+         setValue(next)
+         setCursor(next.length)
++        sessionComposer?.changed(next)
+         return next
+       },
+       consumeSelectionCopy: () => {
+@@ -1019,6 +1023,7 @@ export function PromptInput({
+     setSelection(null)
+     setValue(next)
+     setCursor(offset)
++    sessionComposer?.changed(next)
+   }
+ 
+   const deleteInputRange = (start: number, end: number): void => {
+@@ -1162,21 +1167,24 @@ export function PromptInput({
+     clearVimUndo()
+   }
+ 
+-  const submitText = (text: string, notice?: string) => {
++  const submitText = (text: string, notice?: string): boolean => {
+     const trimmed = text.trim()
+-    if (!trimmed) return
++    if (!trimmed) return false
+     const images = imageRefsFor(trimmed)
+-    if (shellImagesUnsupported(trimmed, images)) return
++    if (shellImagesUnsupported(trimmed, images)) return false
++    const wasWorking = channel.working
++    const accepted = channel.submit(trimmed, images)
++    if (accepted === false) return false
+     rememberHistory(trimmed, images)
+     clearDeliveredDraft()
+-    channel.submit(trimmed, images)
+     if (notice) {
+       channel.notify(notice, { timeoutMs: 2500 })
+-    } else if (channel.working) {
++    } else if (wasWorking) {
+       // While the model is streaming, the message joins the DSH inbox and is
+       // processed after the current turn — say so, or it looks "lost".
+       channel.notify(t('input-sent-after-turn'), { timeoutMs: 2500 })
+     }
++    return true
+   }
+ 
+   /**
+@@ -1188,9 +1196,10 @@ export function PromptInput({
+     const trimmed = text.trim()
+     if (!trimmed) return
+     const images = imageRefsFor(trimmed)
++    const accepted = channel.steer(trimmed, images)
++    if (accepted === false) return
+     rememberHistory(trimmed, images)
+     clearDeliveredDraft()
+-    channel.steer(trimmed, images)
+     channel.notify(t('input-interrupted-next'), { timeoutMs: 2500 })
+   }
+ 
+@@ -1203,9 +1212,10 @@ export function PromptInput({
+     if (!trimmed) return
+     const images = imageRefsFor(trimmed)
+     if (shellImagesUnsupported(trimmed, images)) return
++    const accepted = channel.submit(trimmed, images)
++    if (accepted === false) return
+     rememberHistory(trimmed, images)
+     clearDeliveredDraft()
+-    channel.submit(trimmed, images)
+     channel.notify(t('input-queued-after-turn'), { timeoutMs: 2500 })
+   }
+ 
+@@ -1920,7 +1930,9 @@ export function PromptInput({
+           return
+         }
+       }
+-      if (!tryRunCommand(line)) submitText(line)
++      // A complete piped line has not entered the editor yet. Preserve it
++      // explicitly when the execution owner declines to accept the message.
++      if (!tryRunCommand(line) && !submitText(line)) setInput(line)
+       return
+     }
+     if (key.return && isMod(key)) {
+diff --git a/src/dsh-adapter/approvals.ts b/src/dsh-adapter/approvals.ts
+index dd49fbe649ae18c448aec14696966d9275232dd4..2f647075f036e5aa31fd8b3e39959e651bad2380 100644
+--- a/src/dsh-adapter/approvals.ts
++++ b/src/dsh-adapter/approvals.ts
+@@ -79,10 +79,12 @@ interface PendingApproval {
+    * this ask sits in the queue or on the panel (the session log keeps
+    * appending after park()).
+    */
+-  readonly request: ApprovalRequest
++  readonly request?: ApprovalRequest
+   snapshot: PendingSnapshot
+   resolve: (outcome: ApprovalOutcome) => void
+   onAbort: () => void
++  settled: boolean
++  detachAbort: () => void
+ }
+ 
+ const approvalStores = new WeakMap<object, ApprovalStore>()
+@@ -312,7 +314,7 @@ export class ApprovalStore {
+    */
+   private refreshActiveExternal(): void {
+     const pending = this.active
+-    if (pending === undefined || pending.snapshot.external === true) return
++    if (pending === undefined || pending.snapshot.external === true || pending.request === undefined) return
+     const events = snapshotLiveSessionEvents(pending.request.agent.session)
+     if (events.length === this.externalCheckedAtEvents) return
+     this.externalCheckedAtEvents = events.length
+@@ -368,7 +370,7 @@ export class ApprovalStore {
+     const agentKey = String(req.agent.id)
+     const key = String(req.callId)
+     const occupies = (pending: PendingApproval): boolean =>
+-      String(pending.request.agent.id) === agentKey
++      pending.request !== undefined && String(pending.request.agent.id) === agentKey
+       && pending.request.callId !== undefined && String(pending.request.callId) === key
+     return (this.active !== undefined && occupies(this.active)) || this.queue.some(occupies)
+   }
+@@ -410,6 +412,8 @@ export class ApprovalStore {
+           ...(external ? { external: true } : {}),
+         },
+         resolve,
++        settled: false,
++        detachAbort: () => undefined,
+         onAbort: () => {
+           // A REAL controller.abort() sets `aborted` BEFORE dispatching the
+           // event; a forged signal.dispatchEvent(new Event('abort')) fires
+@@ -426,21 +430,58 @@ export class ApprovalStore {
+           if (this.active === pending) {
+             this.active = undefined
+             this.rebuildSnapshot()
+-            pending.resolve('cancelled')
++            this.settlePending(pending, 'cancelled')
+             this.startNext()
+             return
+           }
+           const at = this.queue.indexOf(pending)
+           if (at >= 0) this.queue.splice(at, 1)
+-          pending.resolve('cancelled')
++          this.settlePending(pending, 'cancelled')
+         },
+       }
+-      req.signal?.addEventListener('abort', pending.onAbort, { once: true })
++      if (req.signal !== undefined) {
++        req.signal.addEventListener('abort', pending.onAbort, { once: true })
++        pending.detachAbort = () => req.signal?.removeEventListener('abort', pending.onAbort)
++      }
+       this.queue.push(pending)
+       this.startNext()
+     })
+   }
+ 
++  /** Park a non-DSH execution permission on the same visible approval panel. */
++  parkExternal(input: { sourceSessionId: string; requestId: string; title: string; signal?: AbortSignal }): Promise<ApprovalOutcome> {
++    assertCapabilityShadowPolicy('host.presentation.approve', this.runtime.mode, this.runtime.slices)
++    if (input.signal?.aborted === true) return Promise.resolve('cancelled')
++    return new Promise(resolve => {
++      const pending: PendingApproval = {
++        key: `external:${input.requestId}:${++this.seq}`,
++        snapshot: { agentId: input.sourceSessionId, toolName: input.title, external: true },
++        resolve,
++        settled: false,
++        detachAbort: () => undefined,
++        onAbort: () => {
++          if (input.signal?.aborted !== true) return
++          if (this.active === pending) {
++            this.active = undefined
++            this.rebuildSnapshot()
++            this.settlePending(pending, 'cancelled')
++            this.startNext()
++          } else {
++            const at = this.queue.indexOf(pending)
++            if (at >= 0) this.queue.splice(at, 1)
++            this.settlePending(pending, 'cancelled')
++          }
++          this.emit()
++        },
++      }
++      if (input.signal !== undefined) {
++        input.signal.addEventListener('abort', pending.onAbort, { once: true })
++        pending.detachAbort = () => input.signal?.removeEventListener('abort', pending.onAbort)
++      }
++      this.queue.push(pending); this.startNext()
++    })
++  }
++
+   /** Advance to the next queued ask, if any. The promoted ask's source
+    * badge is re-checked against the log that has kept appending since it
+    * was parked (P-4: a same-callId twin parked while live may surface long
+@@ -466,7 +507,7 @@ export class ApprovalStore {
+     this.noteConsumed(pending)
+     this.active = undefined
+     this.rebuildSnapshot()
+-    pending.resolve(outcome)
++    this.settlePending(pending, outcome)
+     this.startNext()
+     this.emit()
+   }
+@@ -481,10 +522,10 @@ export class ApprovalStore {
+     this.active = undefined
+     if (active !== undefined) this.noteConsumed(active)
+     this.rebuildSnapshot()
+-    active?.resolve(outcome)
++    if (active !== undefined) this.settlePending(active, outcome)
+     for (const pending of this.queue.splice(0)) {
+       this.noteConsumed(pending)
+-      pending.resolve(outcome)
++      this.settlePending(pending, outcome)
+     }
+     this.emit()
+   }
+@@ -494,10 +535,20 @@ export class ApprovalStore {
+    * @param pending - The ask leaving the active/queue set.
+    */
+   private noteConsumed(pending: PendingApproval): void {
++    if (pending.request === undefined) return
+     const { callId } = pending.request
+     if (callId !== undefined) this.consumedCallIds.add(consumedKey(pending.request.agent.id, callId))
+   }
+ 
++  /** Resolve once and remove its AbortSignal listener on every exit path. */
++  private settlePending(pending: PendingApproval, outcome: ApprovalOutcome): boolean {
++    if (pending.settled) return false
++    pending.settled = true
++    pending.detachAbort()
++    pending.resolve(outcome)
++    return true
++  }
++
+   /**
+    * A same-callId duplicate just parked: every pending ask on that callId is
+    * now source-ambiguous. The forged-first order parks the fake ask clean
+@@ -515,7 +566,7 @@ export class ApprovalStore {
+     const agentKey = String(agentId)
+     const key = String(callId)
+     const same = (pending: PendingApproval): boolean =>
+-      String(pending.request.agent.id) === agentKey
++      pending.request !== undefined && String(pending.request.agent.id) === agentKey
+       && pending.request.callId !== undefined && String(pending.request.callId) === key
+     let flipped = false
+     if (this.active !== undefined && same(this.active) && this.active.snapshot.external !== true) {
+diff --git a/src/dsh-adapter/channel-ui.ts b/src/dsh-adapter/channel-ui.ts
+index 55391bbbe92f52c79b0da13332a001b1e85fde30..9efecf52d370e400bf1dea19570bf472f6c59e14 100644
+--- a/src/dsh-adapter/channel-ui.ts
++++ b/src/dsh-adapter/channel-ui.ts
+@@ -1,5 +1,4 @@
+ /** Production assembly for the in-process Channel renderer capability. */
+-import type { ChannelState } from './channel.js'
+ import { bindChannelOwner, disposeChannelOwner, onChannelOwnerDispose } from './channel/owner.js'
+ import { createChannelUi, createChannelUiLease } from '../adapter/channel/ui.js'
+ import type { ChannelUi } from '../adapter/channel/ui-policy.js'
+@@ -17,7 +16,7 @@ const FACADE_PROBE_MS = 250
+ 
+ export function mountChannelUi(
+   ctx: unknown,
+-  channel: ChannelState,
++  channel: ChannelUi,
+   pluginHost: unknown,
+   mode: AdapterMode,
+ ): { channel: ChannelUi; dispose(): void } {
+diff --git a/src/dsh-adapter/extensions.ts b/src/dsh-adapter/extensions.ts
+index 75dd2ae96c91c528ed0838c11b9ccf3af72d44dd..90ca9feab0cc0a99d105f035f105f5f379f97b02 100644
+--- a/src/dsh-adapter/extensions.ts
++++ b/src/dsh-adapter/extensions.ts
+@@ -13,6 +13,7 @@
+  * - `ctx.tuiRenderers` — custom session-entry text renderers
+  * - `ctx.tuiToast`     — transient fire-and-forget notifications
+  * - `ctx.tuiThemes`    — runtime theme declarations (host-readable)
++ * - `ctx.tuiSessionExecution` — optional external session-driver registration
+  *
+  * The decision-point events (`tui/input`, `tui/rewind-prompt`, …) need no
+  * separate service — they are fired by the channel and answered through the
+@@ -38,6 +39,7 @@ import TuiShortcutRuntime from './shortcuts.js'
+ import TuiRendererRuntime from './renderers.js'
+ import TuiToastRuntime from './toast.js'
+ import TuiThemeRuntime from './themes.js'
++import { TuiSessionExecutionRuntime } from './session-execution-registry.js'
+ import { installDecisionGuard } from './decision-guard.js'
+ import { readGrantStore } from '../adapter/standard/grants.js'
+ import { adapterRuntimeFor } from '../adapter/kernel/runtime-context.js'
+@@ -52,4 +54,5 @@ export function apply(ctx: Context): void {
+   ctx.plugin(TuiRendererRuntime)
+   ctx.plugin(TuiToastRuntime)
+   ctx.plugin(TuiThemeRuntime)
++  ctx.plugin(TuiSessionExecutionRuntime)
+ }
+diff --git a/src/dsh-adapter/index.ts b/src/dsh-adapter/index.ts
+index 972fe77a0991bf7cad084c2b13eae8e35cc7d122..718edcb96d9267dde35f9a4bb7da44d812a96cf6 100644
+--- a/src/dsh-adapter/index.ts
++++ b/src/dsh-adapter/index.ts
+@@ -13,6 +13,13 @@ import { DEFAULT_STATUS_BAR, normalizePageMargin, type PageMarginSetting, type S
+ import { SHORTCUT_ACTIONS, type ShortcutActionId } from '../utils/keymap.js'
+ 
+ export const name = 'dsh-tui'
++export {
++  type SessionExecutionDriver,
++  type SessionExecutionEvent,
++  type SessionExecutionPermissionOutcome,
++  type SessionExecutionSnapshot,
++  type TuiSessionExecutionRegistry,
++} from './session-execution.js'
+ // `tuiWorkspaces` must stay OUT of this code-level inject (issue #183): the
+ // dsh CLI resolves the bundle's cordis.patch.yml from the FIRST copy of this
+ // package found from its own install anchor (typically the global launcher),
+@@ -29,6 +36,9 @@ export const inject = ['agents']
+  * directory, and display preferences.
+  */
+ export interface Config {
++  /** Optional external execution driver. When selected, dsh-tui renders the
++   * driver session and does not create or resolve a native DSH Agent. */
++  driverId?: string
+   /** Existing session to attach; a fresh session is created when absent. */
+   sessionId?: string
+   /** LLM provider route. The route resolves atomically (issue #67): when
+@@ -137,6 +147,7 @@ export interface Config {
+ }
+ 
+ export const Config: Schema<Config> = Schema.object({
++  driverId: Schema.string().required(false),
+   sessionId: Schema.string().required(false),
+   // No schema defaults on the route: a `.default()` here would make an
+   // unset key indistinguishable from an explicit cordis.yml choice and the
+diff --git a/src/dsh-adapter/plugin.ts b/src/dsh-adapter/plugin.ts
+index 38510314ff87292a0ef1248ee3741a24dcfd3781..f62520b3f7b993ab7e5ad83c8021f922eab32f8c 100644
+--- a/src/dsh-adapter/plugin.ts
++++ b/src/dsh-adapter/plugin.ts
+@@ -60,6 +60,8 @@ import { getHostSettingsSections, getLocalSettingsSectionsHost, type TuiSettings
+ import { compositionRoot, withHostRootCapability } from './host-access.js'
+ import { render, ThemeProvider, AlternateScreen } from '../ui.js'
+ import { PageMargin } from '../components/PageMargin.js'
++import { mountExternalExecutionTui } from './external-execution-tui.js'
++import { getHostSessionExecution } from './session-execution-registry.js'
+ import instances from '../ink/instances.js'
+ import { cursorMove, DISABLE_KITTY_KEYBOARD, DISABLE_MODIFY_OTHER_KEYS, DISABLE_WIN32_INPUT_MODE } from '../ink/termio/csi.js'
+ import { DBP, DFE, DISABLE_MOUSE_TRACKING, EXIT_ALT_SCREEN, SHOW_CURSOR } from '../ink/termio/dec.js'
+@@ -214,6 +216,32 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
+     return
+   }
+ 
++  // Resolve the initial UI language for either execution owner before render.
++  const envLang = process.env.DSH_TUI_LANG
++  setLang(isLang(envLang) ? envLang : isLang(config.lang) ? config.lang : resolveStartupLang())
++
++  // A profile extension row owns the public registry. Selecting a registered
++  // driver bypasses every native Agent/session creation path below.
++  if (config.driverId !== undefined) {
++    const selected = getHostSessionExecution(ctx.get('tuiSessionExecution'))?.acquire(config.driverId)
++    if (selected === undefined) {
++      throw new Error(`dsh-tui: external execution driver is not registered: ${config.driverId}`)
++    }
++    try {
++      await mountExternalExecutionTui(ctx, selected.driver, selected.release, selected.onRevoked, {
++        fullscreen: config.fullscreen,
++        terminalImages: config.terminalImages,
++        onUserExit: async code => disposeRootAndExit(ctx, code),
++      })
++    } catch (error) {
++      try { await selected.release() } catch (releaseError) {
++        throw new AggregateError([error, releaseError], 'dsh-tui: external execution mount cleanup failed')
++      }
++      throw error
++    }
++    return
++  }
++
+   // The official profile launcher owns the system preset root and replaces
+   // any bundle-supplied roots at boot. Install dsh-tui's bundled presets via
+   // the roster's supported user-root seam before resolving the first agent.
+@@ -237,8 +265,6 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
+   // namespace registers below), then cordis.yml `lang`, then the
+   // persisted `/lang` choice, then `zh`. Must settle before the first
+   // render so every module resolves strings in the same language.
+-  const envLang = process.env.DSH_TUI_LANG
+-  setLang(isLang(envLang) ? envLang : isLang(config.lang) ? config.lang : resolveStartupLang())
+ 
+   // /update restart verification: the pre-update process stamps the version
+   // it was leaving behind; if the freshly loaded one is not newer, the
+diff --git a/experiments/native-tui-execution/README.md b/experiments/native-tui-execution/README.md
+new file mode 100644
+index 0000000..a301559
+--- /dev/null
++++ b/experiments/native-tui-execution/README.md
+@@ -0,0 +1,36 @@
++# Native TUI execution seam (M1 fixture)
++
++This directory records the smallest reproducible external-execution setup.
++Set `dsh-tui.driverId` to the registered driver id. The TUI then mounts the
++standard Chat and PromptInput around that driver's projection and never calls
++the native `resolveAgent()` path.
++
++`fake-driver.ts` is a deterministic fixture: submit streams an echo, cancel
++marks the in-memory projection idle, and the driver can be disposed repeatedly.
++It is a test fixture, not a production driver. M1 rows are display projection
++only; the external driver remains responsible for any durable transcript.
++
++For a profile row, load `fixture-plugin.ts` after `dsh-tui-extensions` and
++load dsh-tui with `driverId: fixture`. From this checkout, the direct TS
++fixture entry is `node --import tsx/esm experiments/native-tui-execution/fixture-plugin.ts`.
++
++The public driver contract lives in `src/dsh-adapter/session-execution.ts`.
++An external driver owns its execution session; `uiSessionId` is the stable
++conversation identity used by the UI and must not change merely because the
++driver changes a backend execution id.
++
++Unsupported native actions (attachments, shell, steer, fork, model/effort,
++recap, background agents, and native slash commands) remain visibly refused.
++
++M2 adds role-tagged history rows, draft restoration/observation, driver-owned
++commands and monotonic idle session updates. These additions remain generic:
++ARC checkpoints, endpoint configuration, Home and SSH stay inside the optional
++ARC driver. Live turn events remain fenced by the host's turn id. Idle session
++updates are rejected while a submitted turn is active, and older generations
++cannot overwrite a newer handoff. The existing prompt title can display the
++logical session's title; backend changes do not rebind the editor.
++
++A late profile patch replaces `config` wholesale: if it changes TUI options,
++repeat `driverId` explicitly. The selected id must be registered before the UI
++row runs. Composer callbacks travel through an internal scoped context to the
++guarded driver; plugins never obtain React refs or another driver's handle.
+diff --git a/experiments/native-tui-execution/README.zh-CN.md b/experiments/native-tui-execution/README.zh-CN.md
+new file mode 100644
+index 0000000..7a20194
+--- /dev/null
++++ b/experiments/native-tui-execution/README.zh-CN.md
+@@ -0,0 +1,18 @@
++# 原生 TUI 外部执行接缝（M1 fixture）
++
++把 `dsh-tui.driverId` 设为已注册的 driver id 后，TUI 只挂载该 driver 的会话投影，
++不会调用原生 `resolveAgent()`。界面会保持 `uiSessionId` 作为稳定会话身份；
++`executionSessionId` 是后端执行身份，可以在恢复时不同。
++
++`fake-driver.ts` 用于 PTY fixture：submit 接受后流式 echo，cancel 回到 idle，重复 close
++安全。它不是生产 driver。
++
++附件、shell、steer、fork、模型/effort、recap、后台 Agent 和原生命令在 M1 都显式不可用。
++
++M2 增加角色明确的历史条目、草稿恢复/观察、驱动命令和递增代次的空闲会话通知。
++检查点、端点配置、Home 与 SSH 仍归可选 ARC 驱动。回合事件依旧绑定提交的 turnId；
++回合运行时拒绝空闲会话通知，旧代次不能覆盖新投切。执行端变化不会重建编辑器。
++
++DSH 后置补丁会整体替换 `config`；补充 TUI 配置时必须再次写出 `driverId`。
++UI 行需等待驱动注册。草稿经内部作用域上下文交给有生命周期保护的驱动；
++插件不能获得 React ref 或其他驱动对象。原有 prompt 标题可显示逻辑会话标题。
+diff --git a/experiments/native-tui-execution/fake-driver.ts b/experiments/native-tui-execution/fake-driver.ts
+new file mode 100644
+index 0000000..9c82d92
+--- /dev/null
++++ b/experiments/native-tui-execution/fake-driver.ts
+@@ -0,0 +1,37 @@
++import type {
++  SessionExecutionDriver,
++  SessionExecutionEvent,
++  SessionExecutionPermissionOutcome,
++  SessionExecutionSnapshot,
++} from '../../src/dsh-adapter/session-execution.js'
++
++/** Deterministic in-memory driver for a PTY or direct UI fixture. */
++export function createFakeDriver(id = 'fixture'): SessionExecutionDriver {
++  let closed = false
++  let snapshot: SessionExecutionSnapshot = {
++    uiSessionId: 'fixture-ui-session', executionSessionId: 'fixture-execution-1', title: 'Fixture', working: false,
++  }
++  const listeners = new Set<(event: SessionExecutionEvent) => void>()
++  const publish = (event: SessionExecutionEvent): void => { for (const listener of listeners) listener(event) }
++  return {
++    id,
++    capabilities: new Set(['submit', 'cancel', 'permission-reply']),
++    snapshot: () => snapshot,
++    subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener) },
++    submit(text, turnId) {
++      if (closed || text.trim() === '') return false
++      snapshot = { ...snapshot, working: true }
++      publish({ type: 'snapshot', turnId, snapshot })
++      publish({ type: 'text', turnId, delta: `echo: ${text}` })
++      snapshot = { ...snapshot, working: false }
++      publish({ type: 'snapshot', turnId, snapshot })
++      return true
++    },
++    async cancel() {
++      snapshot = { ...snapshot, working: false }
++      publish({ type: 'snapshot', turnId: 'fixture-turn', snapshot })
++    },
++    async replyPermission(_requestId: string, _outcome: SessionExecutionPermissionOutcome) {},
++    async close() { closed = true; listeners.clear() },
++  }
++}
+diff --git a/experiments/native-tui-execution/fixture-plugin.ts b/experiments/native-tui-execution/fixture-plugin.ts
+new file mode 100644
+index 0000000..ab6ab6d
+--- /dev/null
++++ b/experiments/native-tui-execution/fixture-plugin.ts
+@@ -0,0 +1,10 @@
++import type { Context } from '@deepseek-ai/cordis'
++import { createFakeDriver } from './fake-driver.js'
++
++export const name = 'dsh-tui-execution-fixture'
++export const inject = ['tuiSessionExecution']
++
++/** Mount after dsh-tui-extensions, then select `driverId: fixture`. */
++export function apply(ctx: Context): void {
++  ctx.tuiSessionExecution.register(ctx, createFakeDriver())
++}
+diff --git a/scripts/verify-external-approvals.ts b/scripts/verify-external-approvals.ts
+new file mode 100644
+index 0000000..acffdde
+--- /dev/null
++++ b/scripts/verify-external-approvals.ts
+@@ -0,0 +1,82 @@
++/** Focused external-driver approval queue proof.
++ * Run: node --import tsx/esm scripts/verify-external-approvals.ts
++ */
++import assert from 'node:assert/strict'
++import { ApprovalStore } from '../src/dsh-adapter/approvals.js'
++
++class SignalProbe {
++  aborted = false
++  adds = 0
++  removes = 0
++  private readonly listeners = new Set<() => void>()
++  addEventListener(_type: string, listener: () => void): void { this.adds += 1; this.listeners.add(listener) }
++  removeEventListener(_type: string, listener: () => void): void { this.removes += 1; this.listeners.delete(listener) }
++  abort(): void { this.aborted = true; for (const listener of [...this.listeners]) listener() }
++}
++const asSignal = (probe: SignalProbe): AbortSignal => probe as unknown as AbortSignal
++
++// A visible request settles once on the panel decision and detaches its abort listener.
++{
++  const store = new ApprovalStore({ mode: 'legacy', slices: [] })
++  const signal = new SignalProbe()
++  const waiting = store.parkExternal({ sourceSessionId: 's', requestId: 'one', title: 'Allow?', signal: asSignal(signal) })
++  assert.equal(store.getSnapshot()?.toolName, 'Allow?')
++  store.decide('allowed-once')
++  assert.equal(await waiting, 'allowed-once')
++  assert.equal(signal.adds, 1)
++  assert.equal(signal.removes, 1)
++  signal.abort()
++  assert.equal(store.getSnapshot(), null, 'a settled listener cannot advance the queue')
++}
++
++// A pre-aborted request never enters the queue or installs a listener.
++{
++  const store = new ApprovalStore({ mode: 'legacy', slices: [] })
++  const signal = new SignalProbe()
++  signal.abort()
++  assert.equal(await store.parkExternal({ sourceSessionId: 's', requestId: 'pre', title: 'pre', signal: asSignal(signal) }), 'cancelled')
++  assert.equal(signal.adds, 0)
++  assert.equal(store.getSnapshot(), null)
++}
++
++// Cancelling a queued item removes only it, leaves the active request visible,
++// and still advances correctly when the active item is decided.
++{
++  const store = new ApprovalStore({ mode: 'legacy', slices: [] })
++  const active = store.parkExternal({ sourceSessionId: 's', requestId: 'active', title: 'active' })
++  const signal = new SignalProbe()
++  const queued = store.parkExternal({ sourceSessionId: 's', requestId: 'queued', title: 'queued', signal: asSignal(signal) })
++  signal.abort()
++  assert.equal(await queued, 'cancelled')
++  assert.equal(signal.removes, 1)
++  assert.equal(store.getSnapshot()?.toolName, 'active')
++  store.decide('rejected')
++  assert.equal(await active, 'rejected')
++  assert.equal(store.getSnapshot(), null)
++}
++
++// settleAll detaches both active and queued external listeners exactly once.
++{
++  const store = new ApprovalStore({ mode: 'legacy', slices: [] })
++  const firstSignal = new SignalProbe()
++  const secondSignal = new SignalProbe()
++  const first = store.parkExternal({ sourceSessionId: 's', requestId: 'first', title: 'first', signal: asSignal(firstSignal) })
++  const second = store.parkExternal({ sourceSessionId: 's', requestId: 'second', title: 'second', signal: asSignal(secondSignal) })
++  store.settleAll('cancelled')
++  assert.equal(await first, 'cancelled')
++  assert.equal(await second, 'cancelled')
++  assert.equal(firstSignal.removes, 1)
++  assert.equal(secondSignal.removes, 1)
++}
++
++// External execution is still a host.presentation.approve mutation and is
++// refused in passive shadow before it can add listeners or enqueue work.
++{
++  const store = new ApprovalStore({ mode: 'passive-shadow', slices: [] })
++  const signal = new SignalProbe()
++  assert.throws(() => store.parkExternal({ sourceSessionId: 's', requestId: 'shadow', title: 'shadow', signal: asSignal(signal) }), /shadow policy denies mutate/u)
++  assert.equal(signal.adds, 0)
++  assert.equal(store.getSnapshot(), null)
++}
++
++console.log('ok external approval decision/cancel/preabort/queue/shadow')
+diff --git a/scripts/verify-session-execution-registry.ts b/scripts/verify-session-execution-registry.ts
+new file mode 100644
+index 0000000..abf098e
+--- /dev/null
++++ b/scripts/verify-session-execution-registry.ts
+@@ -0,0 +1,163 @@
++/** Focused lifecycle proof for the optional external session execution registry.
++ * Run: node --import tsx/esm scripts/verify-session-execution-registry.ts
++ */
++import { Context } from '@deepseek-ai/cordis'
++import { TuiSessionExecutionRuntime, getHostSessionExecution } from '../src/dsh-adapter/session-execution-registry.js'
++import type { SessionExecutionDriver, SessionExecutionEvent } from '../src/dsh-adapter/session-execution.js'
++
++let failures = 0
++const check = (name: string, ok: boolean): void => {
++  if (!ok) failures += 1
++  console.log(`${ok ? 'ok  ' : 'FAIL'} ${name}`)
++}
++const settle = async (): Promise<void> => { await Promise.resolve(); await Promise.resolve() }
++const expectReject = async (action: () => Promise<unknown>): Promise<boolean> => {
++  try { await action(); return false } catch { return true }
++}
++
++interface Probe {
++  readonly driver: SessionExecutionDriver
++  emit(event: SessionExecutionEvent): void
++  resolveDeferred(): void
++  readonly calls: { close: number; reply: string[]; unsubscribe: number; snapshot: number }
++}
++function probe(id: string, options: { throwReply?: boolean; throwUnsubscribe?: boolean; deferReply?: boolean; deferUnsubscribe?: boolean } = {}): Probe {
++  const deferred: (() => void)[] = []
++  const listeners = new Set<(event: SessionExecutionEvent) => void>()
++  const calls = { close: 0, reply: [] as string[], unsubscribe: 0, snapshot: 0 }
++  return {
++    calls,
++    resolveDeferred: () => deferred.shift()?.(),
++    emit: event => { for (const listener of listeners) listener(event) },
++    driver: {
++      id,
++      capabilities: new Set(['submit', 'cancel', 'permission-reply']),
++      snapshot: () => { calls.snapshot += 1; return { uiSessionId: id, executionSessionId: id, title: id, working: false } },
++      subscribe(listener) {
++        listeners.add(listener)
++        return () => {
++          calls.unsubscribe += 1
++          listeners.delete(listener)
++          if (options.deferUnsubscribe) return new Promise<void>((resolve, reject) => { deferred.push(() => options.throwUnsubscribe ? reject(new Error('unsubscribe failed')) : resolve()) })
++          if (options.throwUnsubscribe) throw new Error('unsubscribe failed')
++        }
++      },
++      submit: () => true,
++      cancel: async () => undefined,
++      replyPermission: async (requestId) => {
++        calls.reply.push(requestId)
++        if (options.deferReply) return new Promise<void>((resolve, reject) => { deferred.push(() => options.throwReply ? reject(new Error('reply failed')) : resolve()) })
++        if (options.throwReply) throw new Error('reply failed')
++      },
++      close: async () => { calls.close += 1 },
++    },
++  }
++}
++
++const root = new Context()
++root.plugin(TuiSessionExecutionRuntime)
++await settle()
++const service = root.get('tuiSessionExecution')
++const host = getHostSessionExecution(service)
++if (host === undefined) throw new Error('registry host accessor unavailable')
++
++// Root cannot install a driver. A child may pass a forged Context argument,
++// but ownership is recovered from its live Cordis fiber instead.
++const rootDriver = probe('root')
++let rootRefused = false
++try { service.register(root, rootDriver.driver) } catch { rootRefused = true }
++check('root/fake context cannot register', rootRefused && rootDriver.calls.close === 0)
++
++const first = probe('driver')
++let disposeFirst: (() => Promise<void>) | undefined
++const firstFiber = root.plugin({
++  name: 'registry-first', inject: ['tuiSessionExecution'],
++  apply(ctx: Context) { disposeFirst = ctx.tuiSessionExecution.register(root, first.driver) },
++})
++await settle()
++const lease = host.acquire('driver')
++check('live plugin registration ignores supplied root context', lease !== undefined)
++check('single visible owner prevents a second acquire', host.acquire('driver') === undefined)
++if (lease === undefined) throw new Error('first lease missing')
++
++let delivered = 0
++const stopFirst = lease.driver.subscribe(() => { delivered += 1 })
++first.emit({ type: 'permission', turnId: 't', requestId: 'permission-1', title: 'allow?' })
++first.emit({ type: 'permission', turnId: 't', requestId: 'permission-1', title: 'duplicate?' })
++check('duplicate permission event is not redelivered', delivered === 1)
++await lease.driver.replyPermission('permission-1', 'allow')
++const repeatedRejected = await expectReject(() => lease.driver.replyPermission('permission-1', 'deny'))
++const unknownRejected = await expectReject(() => lease.driver.replyPermission('unknown', 'deny'))
++check('permission reply is single-settle and unknown is rejected locally', first.calls.reply.join(',') === 'permission-1' && repeatedRejected && unknownRejected)
++
++let revoked = 0
++lease.onRevoked(() => { revoked += 1; stopFirst() })
++first.emit({ type: 'text', turnId: 't', delta: 'before' })
++disposeFirst?.()
++await lease.release()
++first.emit({ type: 'text', turnId: 'late', delta: 'after' })
++let snapshotRejected = false
++try { lease.driver.snapshot() } catch { snapshotRejected = true }
++check('unload fences late events, snapshot access, and double unsubscribe', delivered === 2 && snapshotRejected && revoked === 1 && first.calls.unsubscribe === 1)
++check('unload/release closes the raw driver exactly once', first.calls.close === 1)
++check('closed entry cannot be reacquired', host.acquire('driver') === undefined)
++await Promise.resolve(firstFiber.dispose())
++
++const second = probe('driver')
++let disposeSecond: (() => Promise<void>) | undefined
++const secondFiber = root.plugin({
++  name: 'registry-second', inject: ['tuiSessionExecution'],
++  apply(ctx: Context) { disposeSecond = ctx.tuiSessionExecution.register(ctx, second.driver) },
++})
++await settle()
++const replacement = host.acquire('driver')
++check('a new registration can replace a closed instance', replacement !== undefined)
++if (replacement === undefined) throw new Error('replacement lease missing')
++await replacement.release()
++disposeSecond?.()
++await Promise.resolve(secondFiber.dispose())
++
++const failing = probe('failing', { throwReply: true, throwUnsubscribe: true })
++let disposeFailing: (() => Promise<void>) | undefined
++const failingFiber = root.plugin({
++  name: 'registry-failing', inject: ['tuiSessionExecution'],
++  apply(ctx: Context) { disposeFailing = ctx.tuiSessionExecution.register(ctx, failing.driver) },
++})
++await settle()
++const failingLease = host.acquire('failing')
++if (failingLease === undefined) throw new Error('failing lease missing')
++failingLease.driver.subscribe(() => undefined)
++failing.emit({ type: 'permission', turnId: 't', requestId: 'permission-2', title: 'deny?' })
++const cleanupRejected = await expectReject(() => failingLease.release())
++check('cleanup continues after failing reply/unsubscribe', cleanupRejected && failing.calls.reply.join(',') === 'permission-2' && failing.calls.unsubscribe === 1 && failing.calls.close === 1)
++disposeFailing?.()
++await Promise.resolve(failingFiber.dispose())
++
++
++const deferred = probe('deferred', { deferReply: true, deferUnsubscribe: true, throwReply: true })
++let disposeDeferred: (() => Promise<void>) | undefined
++const deferredFiber = root.plugin({
++  name: 'registry-deferred', inject: ['tuiSessionExecution'],
++  apply(ctx: Context) { disposeDeferred = ctx.tuiSessionExecution.register(ctx, deferred.driver) },
++})
++await settle()
++const deferredLease = host.acquire('deferred')
++if (deferredLease === undefined) throw new Error('deferred lease missing')
++deferredLease.driver.subscribe(() => undefined)
++deferred.emit({ type: 'permission', turnId: 't', requestId: 'permission-3', title: 'deny?' })
++const firstRelease = deferredLease.release()
++const secondRelease = deferredLease.release()
++let secondSettled = false
++void secondRelease.then(() => { secondSettled = true }, () => { secondSettled = true })
++await settle()
++check('second release waits for deferred denial before raw close', firstRelease === secondRelease && !secondSettled && deferred.calls.reply.join(',') === 'permission-3' && deferred.calls.close === 0)
++deferred.resolveDeferred()
++await settle()
++check('second release also waits for deferred unsubscribe', !secondSettled && deferred.calls.close === 0)
++deferred.resolveDeferred()
++const deferredResults = await Promise.allSettled([firstRelease, secondRelease])
++check('reentrant release shares cleanup failure and closes raw driver once', deferredResults.every(result => result.status === 'rejected') && deferred.calls.close === 1)
++await disposeDeferred?.().catch(() => undefined)
++await Promise.resolve(deferredFiber.dispose())
++
++if (failures > 0) process.exitCode = 1
+diff --git a/src/components/session-composer.ts b/src/components/session-composer.ts
+new file mode 100644
+index 0000000..cac39eb
+--- /dev/null
++++ b/src/components/session-composer.ts
+@@ -0,0 +1,7 @@
++/** Optional host-owned bridge; the editor remains the authority while mounted. */
++import { createContext } from 'react'
++export interface SessionComposer {
++  initialText(): string
++  changed(text: string): void
++}
++export const SessionComposerContext = createContext<SessionComposer | undefined>(undefined)
+diff --git a/src/dsh-adapter/external-execution-tui.ts b/src/dsh-adapter/external-execution-tui.ts
+new file mode 100644
+index 0000000..207db79
+--- /dev/null
++++ b/src/dsh-adapter/external-execution-tui.ts
+@@ -0,0 +1,246 @@
++/** Optional, plugin-owned execution seam for the terminal conversation UI. */
++import React from 'react'
++import { SessionComposerContext } from '../components/session-composer.js'
++import type { Context } from '@deepseek-ai/cordis'
++import type { ChannelUi } from '../adapter/ports/channel-ui.js'
++import { createInitialChannelView } from './channel/state.js'
++import { Chat } from '../screens/Chat.js'
++import { completeCommands, LOCAL_COMMANDS } from '../commands.js'
++import { ApprovalStore } from './approvals.js'
++import { QuestionStore } from './questions.js'
++import { render, ThemeProvider } from '../ui.js'
++import { PageMargin } from '../components/PageMargin.js'
++import { AlternateScreen } from '../ui.js'
++import { mountChannelUi } from './channel-ui.js'
++import { adapterRuntimeFor } from '../adapter/kernel/runtime-context.js'
++import { markChannelReadDirty } from '../adapter/channel/read-view.js'
++import { registerTuiChannel } from '../adapter/channel/host-registry.js'
++import { createChannelOwner, disposeChannelOwner, registerChannelOwner } from './channel/owner.js'
++import { compositionRoot } from './host-access.js'
++import { getHostShortcuts } from './shortcuts.js'
++import { getHostStatusStore } from './status.js'
++import type { SessionExecutionDriver, SessionExecutionEvent, SessionExecutionSnapshot } from './session-execution.js'
++
++const EMPTY_AGENT_ROWS: ReturnType<ChannelUi['agentViewRows']> = Object.freeze([])
++const UI_COMMANDS = LOCAL_COMMANDS.filter(command => ['help', 'exit', 'quit', 'q'].includes(command.name))
++
++/** The external UI intentionally has no Agent-shaped object or host controls. */
++export async function mountExternalExecutionTui(
++  ctx: Context,
++  driver: SessionExecutionDriver,
++  release: () => Promise<void>,
++  onRevoked: (listener: () => void) => () => void,
++  options: { fullscreen?: boolean; terminalImages?: boolean; onUserExit?: (code: number) => Promise<void> } = {},
++): Promise<void> {
++  let snapshot = driver.snapshot()
++  const initial = createInitialChannelView({ model: 'external', provider: driver.id, cwd: process.cwd(), activity: false }, {
++    agentId: snapshot.uiSessionId,
++    mode: { id: 'external', plan: false, sandbox: 'read-only', approval: 'ask' }, cwdDescription: process.cwd(),
++  })
++  const listeners = new Set<() => void>()
++  let closed = false
++  let generation = 0
++  let activeTurnId: string | undefined
++  let acceptingTurn = false
++  const deferredEvents: SessionExecutionEvent[] = []
++  const approvalStore = new ApprovalStore(adapterRuntimeFor(ctx))
++  const permissionAbort = new AbortController()
++  const state = { ...initial, autoRecapOnOpen: false, agentId: snapshot.uiSessionId, sessionTitle: snapshot.title, working: snapshot.working, turnStart: snapshot.working ? Date.now() : 0, status: snapshot.working ? 'running' as const : 'idle' as const, rows: initial.rows.slice(), notifications: initial.notifications.slice() }
++  const emit = (): void => { state.version += 1; for (const listener of listeners) listener() }
++  const notice = (text: string): void => { state.notifications.push({ id: Date.now() + state.version, text, color: 'warning', timeoutMs: 4000 }); emit() }
++  const unavailable = (name: string): void => {
++    notice(`${name} is unavailable for external execution drivers`)
++  }
++  const touchRow = (row: { readonly text: string }): void => {
++    markChannelReadDirty(row)
++    markChannelReadDirty(state.rows)
++  }
++  const appendRow = (row: typeof state.rows[number]): void => {
++    state.rows.push(row)
++    markChannelReadDirty(state.rows)
++  }
++  const projectText = (text: string): void => {
++    const previous = state.rows.at(-1)
++    if (previous?.kind === 'assistant' && previous.streaming === true) {
++      previous.text += text
++      touchRow(previous)
++    } else appendRow({ id: state.version + 1, kind: 'assistant', text, streaming: state.working, fresh: true, time: Date.now() })
++  }
++  const refresh = (next: SessionExecutionSnapshot): void => {
++    if (next.rows !== undefined) {
++      state.rows = next.rows.map(({ tool, ...row }) => ({ ...row, fresh: false,
++        ...(tool === undefined ? {} : { tool: { ...tool, argsText: '', startedAt: row.time } }),
++      }))
++    }
++    state.cwd = next.cwd ?? state.cwd
++    state.displayCwd = next.cwd ?? state.displayCwd
++    state.model = next.model ?? state.model
++    snapshot = next; state.agentId = next.uiSessionId; state.sessionTitle = next.title; state.working = next.working; state.status = next.working ? 'running' : 'idle'
++    if (next.text !== undefined && state.rows.length === 0) projectText(next.text)
++    const previous = state.rows.at(-1)
++    if (previous?.kind === 'assistant' && !next.working) {
++      previous.streaming = false
++      touchRow(previous)
++    }
++    if (!next.working) activeTurnId = undefined
++    emit()
++  }
++  refresh(snapshot)
++  const commands = [...UI_COMMANDS, ...(driver.commands ?? []).filter(command =>
++    /^[a-z][a-z0-9_-]*$/u.test(command.name) && !LOCAL_COMMANDS.some(local => local.name === command.name),
++  ).map(command => ({ ...command, external: true }))]
++  const runCommand: ChannelUi['runExternalCommandOutcome'] = async (name, rawInput, images) => {
++    if (closed || !driver.capabilities.has('commands') || (images?.length ?? 0) > 0) return undefined
++    return driver.command?.(name, rawInput)
++  }
++  const dispatchEvent = (event: SessionExecutionEvent): void => {
++    if (closed) return
++    if (event.type === 'session') {
++      if (event.generation <= generation || activeTurnId !== undefined) return
++      generation = event.generation
++      refresh(event.snapshot)
++      return
++    }
++    if (activeTurnId === undefined || event.turnId !== activeTurnId) return
++    if (event.type === 'snapshot') refresh(event.snapshot)
++    else if (event.type === 'text') { state.responseChars += event.delta.length; projectText(event.delta); emit() }
++    else {
++      void approvalStore.parkExternal({ sourceSessionId: snapshot.uiSessionId, requestId: event.requestId, title: event.title, signal: permissionAbort.signal }).then(outcome => {
++        if (closed) return
++        return driver.replyPermission(event.requestId, outcome === 'allowed-once' ? 'allow' : 'deny')
++      }).catch(error => notice(`Permission reply failed: ${String(error)}`))
++    }
++  }
++  const stop = driver.subscribe(event => {
++    if (acceptingTurn) { deferredEvents.push(event); return }
++    dispatchEvent(event)
++  })
++  const channel: ChannelUi = {
++    ...state,
++    promptSessionLabel: true,
++    commandList: commands,
++    pluginScene: undefined,
++    subagentControl: { interrupt: () => false },
++    jobControl: { kill: () => false },
++    get cwd() { return state.cwd }, get displayCwd() { return state.displayCwd }, get model() { return state.model },
++    get version() { return state.version }, get rows() { return state.rows }, get status() { return state.status }, get sessionTitle() { return state.sessionTitle }, get agentId() { return state.agentId }, get working() { return state.working }, get cancelPending() { return state.cancelPending }, get responseChars() { return state.responseChars }, get turnStart() { return state.turnStart }, get lastUserText() { return state.lastUserText }, get notifications() { return state.notifications },
++    subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener) }, notify(text) { notice(text); return () => undefined },
++    submit(text, images) {
++      if (closed || state.working || !driver.capabilities.has('submit') || /^[!/]/u.test(text) || (images?.length ?? 0) > 0) { notice('Submitting is unavailable for this external driver'); return false }
++      const turnId = `tui-${Date.now()}-${state.version}`
++      const priorTurnStart = state.turnStart
++      const priorResponseChars = state.responseChars
++      activeTurnId = turnId
++      acceptingTurn = true
++      state.working = true
++      state.status = 'running'
++      state.turnStart = Date.now()
++      state.responseChars = 0
++      try {
++        if (!driver.submit(text, turnId)) { activeTurnId = undefined; acceptingTurn = false; state.working = false; state.status = 'idle'; state.turnStart = priorTurnStart; state.responseChars = priorResponseChars; deferredEvents.splice(0); return false }
++        state.lastUserText = text
++        appendRow({ id: state.version + 1, kind: 'user', text, fresh: true, time: Date.now() })
++        emit()
++        acceptingTurn = false
++        for (const event of deferredEvents.splice(0)) dispatchEvent(event)
++        return true
++      } catch (error) {
++        activeTurnId = undefined
++        acceptingTurn = false
++        state.working = false
++        state.status = 'idle'
++        state.turnStart = priorTurnStart
++        state.responseChars = priorResponseChars
++        deferredEvents.splice(0)
++        notice(`External submit failed: ${String(error)}`)
++        return false
++      }
++    },
++    cancel() { if (!driver.capabilities.has('cancel')) return notice('Cancellation is unavailable for this external driver'); state.cancelPending = true; emit(); void Promise.resolve().then(() => driver.cancel()).then(() => { activeTurnId = undefined; state.cancelPending = false; state.working = false; state.status = 'idle'; const row = state.rows.at(-1); if (row?.kind === 'assistant') { row.streaming = false; touchRow(row) } approvalStore.settleAll('cancelled'); if (!closed) emit() }).catch(error => { state.cancelPending = false; notice(`External cancel failed: ${String(error)}`) }) },
++    commandCompletions: input => completeCommands(input, commands), runExternalCommand: async (name, rawInput, images) => (await runCommand(name, rawInput, images))?.text, runExternalCommandOutcome: runCommand, openPluginScene: () => { unavailable('Plugin scenes'); return false }, closePluginScene: () => unavailable('Plugin scenes'), sideQuestion: () => { unavailable('Side questions'); return Promise.resolve({ answer: null, error: 'unavailable' }) }, setWhaleIdle: () => unavailable('Preferences'), stagedImageGeneration: () => 0, stageImage: async () => { unavailable('Attachments'); throw new Error('attachments unavailable') }, stageComposerImage: async () => { unavailable('Attachments'); throw new Error('attachments unavailable') }, hasStagedImage: () => false, discardStagedImage: () => unavailable('Attachments'), stagedImage: () => undefined, stagedImageLimits: () => undefined,
++    steer: () => { unavailable('Steering'); return false }, removePending: () => false, interruptAndDeliver: () => { unavailable('Interrupt-and-deliver'); return 0 }, rewindTo: () => { unavailable('Rewind'); return Promise.resolve(null) }, promptRewind: () => { unavailable('Rewind'); return Promise.resolve(null) }, buildSessionTree: () => { unavailable('Session tree'); return Promise.resolve(null) }, rewindToNode: () => { unavailable('Rewind'); return Promise.resolve(null) }, forkSession: () => { unavailable('Fork'); return Promise.resolve(false) }, resumeTo: () => { unavailable('Resume'); return Promise.resolve({ ok: false, reason: 'unavailable' }) }, newSession: () => { unavailable('New session'); return Promise.resolve(false) }, listWorkspaces: () => Promise.resolve([]), resolveWorkspace: () => Promise.resolve(undefined), switchWorkspace: () => Promise.resolve(false), renameWorkspace: () => Promise.resolve(false), workspaceCommands: () => [], runWorkspaceCommand: () => Promise.resolve(undefined), switchModel: () => Promise.resolve(false), listEfforts: () => Promise.resolve({ efforts: [], defaultEffort: undefined }), setEffort: () => Promise.resolve(false), setDefaultEffort: () => unavailable('Effort'), cycleMode: () => Promise.resolve(),
++    permissionPresets: () => ({ availability: 'unavailable', options: [] }), runPermissionPreset: () => Promise.resolve(false), listPresets: () => Promise.resolve([]), switchPreset: () => { unavailable('Presets'); return Promise.resolve(false) }, clear: () => unavailable('Clear'), loadOlder: () => 0, setActivityFrames: () => false,
++    listModels: () => Promise.resolve([]), listProviders: () => Promise.resolve([]), invalidateModelCompletion: () => undefined, listSkills: () => Promise.resolve([]), describeCredential: () => Promise.resolve(undefined), balanceInfo: async () => { unavailable('Balance'); return { ok: false, reason: 'no-key' } }, providerSetup: () => undefined, oauthProviderStatuses: () => Promise.resolve(undefined), settingsHost: () => undefined, settingsSections: () => [], subscribeSettingsSections: () => () => undefined, listFileCandidates: () => Promise.resolve([]), listFiles: () => Promise.resolve([]), listSessions: () => Promise.resolve([]), previewSession: () => Promise.resolve([]), setResumeTarget: () => unavailable('Resume'), renameSession: () => unavailable('Rename'), setSessionColor: () => unavailable('Color'), recapRecent: async () => { unavailable('Recap'); return { summary: '', title: undefined } }, deleteSession: () => Promise.resolve(false), renameSessionTo: () => Promise.resolve(false), compact: () => unavailable('Compaction'), pushLocal: () => unavailable('Local reports'), mcpStatus: () => [], exportSession: () => { unavailable('Export'); return null }, initWorkspace: () => { unavailable('Workspace initialization'); return null }, doctorInfo: () => [], pluginsInfo: () => [], listSubagents: () => Promise.resolve([]), agentViewRows: () => EMPTY_AGENT_ROWS, subscribeAgentView: () => () => undefined, dispatchBackgroundAgent: () => Promise.resolve({ ok: false, reason: 'unavailable' }), stopBackgroundAgent: () => Promise.resolve(false), attachToAgent: () => Promise.resolve({ ok: false, reason: 'unavailable' }), peekAgentSession: () => Promise.resolve([]), backgroundCurrent: async () => { unavailable('Background agents'); return { ok: false, reason: 'unavailable' } }, replyToAgent: () => Promise.resolve(false), traceEvents: () => [],
++    setDiffLayout: () => unavailable('Preferences'), setThinkingFold: () => unavailable('Preferences'), setToolBackground: () => unavailable('Preferences'), setScrollGutter: () => unavailable('Preferences'), setPageMargin: () => unavailable('Preferences'), setFoldTerminalCommand: () => unavailable('Preferences'), setPromptSessionLabel: () => unavailable('Preferences'), setExpandEditor: () => unavailable('Preferences'), setSmoothStreaming: () => unavailable('Preferences'), setStatusBar: () => unavailable('Preferences'), setWhale: () => unavailable('Preferences'), setMinimal: () => unavailable('Preferences'),
++  }
++  // External sessions get the same lifetime fence and host registration as a
++  // native Channel; no renderer handle may outlive this selected lease.
++  const owner = createChannelOwner()
++  registerChannelOwner(channel, owner)
++  const unregisterChannel = registerTuiChannel(compositionRoot(ctx), channel)
++  // Reuse the same owner-bound in-process UI capability as native sessions.
++  let uiMount: ReturnType<typeof mountChannelUi> | undefined
++  let instance: Awaited<ReturnType<typeof render>> | undefined
++  let closePromise: Promise<void> | undefined
++  let userExitPromise: Promise<void> | undefined
++  const close = (): Promise<void> => {
++    if (closePromise !== undefined) return closePromise
++    closed = true
++    let resolveClose: () => void
++    let rejectClose: (error: unknown) => void
++    closePromise = new Promise<void>((resolve, reject) => { resolveClose = resolve; rejectClose = reject })
++    void (async () => {
++      const attempts: Array<Promise<unknown>> = [
++        Promise.resolve().then(() => permissionAbort.abort()),
++        Promise.resolve().then(() => approvalStore.settleAll('cancelled')),
++        Promise.resolve().then(stop),
++        Promise.resolve().then(unregisterChannel),
++        Promise.resolve().then(() => uiMount?.dispose()),
++        Promise.resolve().then(() => disposeChannelOwner(channel)),
++        Promise.resolve().then(() => instance?.unmount()),
++        release(),
++      ]
++      const results = await Promise.allSettled(attempts)
++      const failures = results.filter((result): result is PromiseRejectedResult => result.status === 'rejected').map(result => result.reason)
++      if (failures.length === 0) resolveClose!()
++      else rejectClose!(failures.length === 1 ? failures[0] : new AggregateError(failures, 'dsh-tui: external execution cleanup failed'))
++    })()
++    return closePromise
++  }
++  // Install revocation before render so an unloading provider cannot leave a
++  // half-mounted terminal tree alive while render awaits.
++  const reportCloseFailure = (error: unknown): void => {
++    ctx.logger.error(`dsh-tui: external execution cleanup failed: ${error instanceof Error ? error.message : String(error)}`)
++    process.exitCode = 1
++  }
++  const userExit = (code: number): void => {
++    if (userExitPromise !== undefined) return
++    userExitPromise = close().then(
++      () => options.onUserExit?.(code),
++      error => {
++        reportCloseFailure(error)
++        return options.onUserExit?.(1)
++      },
++    )
++  }
++  const offRevoked = onRevoked(() => { void close().catch(reportCloseFailure) })
++  ctx.effect(() => () => { offRevoked(); return close() })
++  try {
++    uiMount = mountChannelUi(ctx, channel, undefined, adapterRuntimeFor(ctx).mode)
++    const fullscreen = options.fullscreen === true
++    const chat = React.createElement(Chat, { channel: uiMount.channel, questionStore: new QuestionStore(), approvalStore, fullscreen, extensionShortcuts: getHostShortcuts(ctx.get('tuiShortcuts')), extensionStatus: getHostStatusStore(ctx.get('tuiStatus')), onExit: () => userExit(0) })
++    const composer = driver.capabilities.has('draft') ? {
++      initialText: () => snapshot.draft ?? '',
++      changed(text: string) {
++        if (closed) return
++        try { driver.updateDraft?.(text) } catch (error) { notice(`Draft update failed: ${String(error)}`) }
++      },
++    } : undefined
++    const page = React.createElement(PageMargin, null, React.createElement(SessionComposerContext.Provider, { value: composer }, chat))
++    const children = fullscreen ? React.createElement(AlternateScreen, null, page) : page
++    instance = await render(React.createElement(ThemeProvider, { children }), { exitOnCtrlC: false, terminalImages: options.terminalImages === true })
++    if (closed) await instance.unmount()
++    else {
++      void instance.waitUntilExit().then(
++        () => { if (!closed) userExit(0) },
++        error => { if (!closed) { reportCloseFailure(error); userExit(1) } },
++      )
++    }
++  } catch (error) {
++    offRevoked()
++    try { await close() } catch (cleanupError) {
++      throw new AggregateError([error, cleanupError], 'dsh-tui: external execution setup cleanup failed')
++    }
++    throw error
++  }
++}
+diff --git a/src/dsh-adapter/session-execution-registry.ts b/src/dsh-adapter/session-execution-registry.ts
+new file mode 100644
+index 0000000..4478fe3
+--- /dev/null
++++ b/src/dsh-adapter/session-execution-registry.ts
+@@ -0,0 +1,220 @@
++/** Cordis-owned registry for optional, renderer-free session drivers. */
++import { Context, Service } from '@deepseek-ai/cordis'
++import { adapterRuntimeFor } from '../adapter/kernel/runtime-context.js'
++import { assertCapabilityShadowPolicy, type AdapterRuntimeOptions } from '../adapter/kernel/runtime.js'
++import { bindCallerEffect, concreteService, requirePluginCaller } from './host-access.js'
++import type { SessionExecutionDriver, SessionExecutionEvent, SessionExecutionPermissionOutcome, TuiSessionExecutionRegistry } from './session-execution.js'
++
++type Capability = SessionExecutionDriver['capabilities'] extends ReadonlySet<infer Item> ? Item : never
++interface Entry { readonly driver: SessionExecutionDriver; active: boolean; closePromise: Promise<void> | undefined }
++interface Selection {
++  readonly entry: Entry
++  readonly pending: Set<string>
++  readonly seenPermissionIds: Set<string>
++  readonly cleanups: Set<() => void>
++  readonly revoked: Set<() => void>
++  active: boolean
++  releasePromise: Promise<void> | undefined
++}
++interface State { readonly runtime: AdapterRuntimeOptions; readonly entries: Map<string, Entry>; selected: Selection | undefined }
++export interface HostSessionExecutionSelection {
++  readonly driver: SessionExecutionDriver
++  release(): Promise<void>
++  /** Fires synchronously when the owner unloads or this lease is released. */
++  onRevoked(listener: () => void): () => void
++}
++export interface HostSessionExecution { acquire(id: string): HostSessionExecutionSelection | undefined }
++
++const states = new WeakMap<TuiSessionExecutionRuntime, State>()
++const inactiveMessage = 'dsh-tui: selected session execution driver is no longer active'
++
++function stateFor(runtime: TuiSessionExecutionRuntime): State {
++  const state = states.get(concreteService(runtime))
++  if (state === undefined) throw new Error('dsh-tui: session execution registry is unavailable')
++  return state
++}
++function assertInvoke(state: State): void {
++  assertCapabilityShadowPolicy('host.execution.invoke', state.runtime.mode, state.runtime.slices)
++}
++function closeEntry(entry: Entry): Promise<void> {
++  entry.active = false
++  entry.closePromise ??= Promise.resolve().then(() => entry.driver.close())
++  return entry.closePromise
++}
++function immutableCapabilities(source: ReadonlySet<Capability>): ReadonlySet<Capability> {
++  const values = Object.freeze([...source])
++  const view: ReadonlySet<Capability> = {
++    get size() { return values.length },
++    has(value: Capability) { return values.includes(value) },
++    entries() { return values.map(value => [value, value] as [Capability, Capability])[Symbol.iterator]() },
++    keys() { return values[Symbol.iterator]() },
++    values() { return values[Symbol.iterator]() },
++    forEach(callback, thisArg) { values.forEach(value => callback.call(thisArg, value, value, view)) },
++    [Symbol.iterator]() { return values[Symbol.iterator]() },
++  }
++  return Object.freeze(view)
++}
++
++function release(state: State, selection: Selection): Promise<void> {
++  if (selection.releasePromise !== undefined) return selection.releasePromise
++  // Reserve the complete teardown before any synchronous listener can reenter.
++  let resolve!: () => void
++  let reject!: (reason: unknown) => void
++  selection.releasePromise = new Promise<void>((resolvePromise, rejectPromise) => {
++    resolve = resolvePromise
++    reject = rejectPromise
++  })
++  selection.active = false
++  selection.entry.active = false
++  if (state.selected === selection) state.selected = undefined
++  if (state.entries.get(selection.entry.driver.id) === selection.entry) state.entries.delete(selection.entry.driver.id)
++  const pending = [...selection.pending]
++  selection.pending.clear()
++  const revoked = [...selection.revoked]
++  selection.revoked.clear()
++  const cleanups = [...selection.cleanups]
++  selection.cleanups.clear()
++  const failures: unknown[] = []
++  for (const listener of revoked) {
++    try { listener() } catch (error) { failures.push(error) }
++  }
++  void (async () => {
++    // The transport remains open through denials and unsubscription. Each task
++    // gets a chance even if an earlier plugin callback fails.
++    for (const requestId of pending) {
++      try { await selection.entry.driver.replyPermission(requestId, 'deny') } catch (error) { failures.push(error) }
++    }
++    for (const cleanup of cleanups) {
++      try { await cleanup() } catch (error) { failures.push(error) }
++    }
++    try { await closeEntry(selection.entry) } catch (error) { failures.push(error) }
++    if (failures.length === 0) resolve()
++    else if (failures.length === 1) reject(failures[0])
++    else reject(new AggregateError(failures, 'dsh-tui: session execution release failed'))
++  })()
++  return selection.releasePromise
++}
++function guarded(state: State, selection: Selection): SessionExecutionDriver {
++  const driver = selection.entry.driver
++  const active = () => selection.active && selection.entry.active
++  const unavailable = () => Promise.reject(new Error(inactiveMessage))
++  return Object.freeze({
++    id: driver.id,
++    capabilities: immutableCapabilities(driver.capabilities),
++    commands: Object.freeze((driver.commands ?? []).map(command => Object.freeze({ ...command }))),
++    command(name, rawInput) {
++      if (!active()) return unavailable()
++      assertInvoke(state)
++      if (!driver.capabilities.has('commands') || !driver.commands?.some(command => command.name === name)) return Promise.resolve(undefined)
++      return driver.command?.(name, rawInput) ?? Promise.resolve(undefined)
++    },
++    updateDraft(text) {
++      if (!active()) throw new Error(inactiveMessage)
++      assertInvoke(state)
++      if (driver.capabilities.has('draft')) driver.updateDraft?.(text)
++    },
++    snapshot: () => {
++      if (!active()) throw new Error(inactiveMessage)
++      return driver.snapshot()
++    },
++    subscribe(listener) {
++      if (!active()) return () => undefined
++      const unsubscribe = driver.subscribe((event: SessionExecutionEvent) => {
++        if (!active()) return
++        if (event.type === 'permission') {
++          if (selection.seenPermissionIds.has(event.requestId)) return
++          selection.seenPermissionIds.add(event.requestId)
++          selection.pending.add(event.requestId)
++        }
++        listener(event)
++      })
++      let stopped = false
++      const stop = (): void => {
++        if (stopped) return
++        stopped = true
++        selection.cleanups.delete(stop)
++        unsubscribe()
++      }
++      selection.cleanups.add(stop)
++      return stop
++    },
++    submit(text, turnId) {
++      if (!active()) return false
++      assertInvoke(state)
++      return driver.submit(text, turnId)
++    },
++    cancel() {
++      if (!active()) return unavailable()
++      assertInvoke(state)
++      return driver.cancel()
++    },
++    replyPermission(requestId, outcome: SessionExecutionPermissionOutcome) {
++      if (!active()) return unavailable()
++      assertInvoke(state)
++      if (!selection.pending.delete(requestId)) return unavailable()
++      return driver.replyPermission(requestId, outcome)
++    },
++    close() { return release(state, selection) },
++  })
++}
++
++export class TuiSessionExecutionRuntime extends Service implements TuiSessionExecutionRegistry {
++  constructor(ctx: Context) {
++    super(ctx, 'tuiSessionExecution')
++    states.set(this, { runtime: adapterRuntimeFor(ctx), entries: new Map(), selected: undefined })
++  }
++  register(_pluginCtx: Context, driver: SessionExecutionDriver): () => Promise<void> {
++    const state = stateFor(this)
++    assertCapabilityShadowPolicy('host.execution.register', state.runtime.mode, state.runtime.slices)
++    // The supplied Context is deliberately ignored: only Cordis's active fiber can own this driver.
++    const caller = requirePluginCaller(this.ctx, 'tuiSessionExecution.register', this)
++    if (!/^[a-z][a-z0-9_-]{0,63}$/u.test(driver.id)) throw new TypeError(`dsh-tui: invalid session execution driver id: ${driver.id}`)
++    if (state.entries.has(driver.id)) throw new Error(`dsh-tui: session execution driver already registered: ${driver.id}`)
++    const entry: Entry = { driver, active: true, closePromise: undefined }
++    state.entries.set(driver.id, entry)
++    let disposePromise: Promise<void> | undefined
++    const dispose = (): Promise<void> => {
++      if (disposePromise !== undefined) return disposePromise
++      entry.active = false
++      if (state.entries.get(driver.id) === entry) state.entries.delete(driver.id)
++      const selected = state.selected?.entry === entry ? state.selected : undefined
++      disposePromise = selected === undefined ? closeEntry(entry) : release(state, selected)
++      return disposePromise
++    }
++    if (!bindCallerEffect(caller, dispose)) {
++      dispose()
++      throw new Error('dsh-tui: session execution driver activation is no longer live')
++    }
++    return dispose
++  }
++}
++function acquire(runtime: TuiSessionExecutionRuntime, id: string): HostSessionExecutionSelection | undefined {
++  const state = stateFor(runtime)
++  assertCapabilityShadowPolicy('host.execution.acquire', state.runtime.mode, state.runtime.slices)
++  const entry = state.entries.get(id)
++  if (entry === undefined || !entry.active || state.selected !== undefined) return undefined
++  const selection: Selection = { entry, pending: new Set(), seenPermissionIds: new Set(), cleanups: new Set(), revoked: new Set(), active: true, releasePromise: undefined }
++  state.selected = selection
++  return Object.freeze({
++    driver: guarded(state, selection),
++    release: () => release(state, selection),
++    onRevoked(listener) {
++      if (!selection.active) {
++        listener()
++        return () => undefined
++      }
++      selection.revoked.add(listener)
++      return () => selection.revoked.delete(listener)
++    },
++  })
++}
++/** Host-only lookup; plugins cannot list or retrieve another driver's object. */
++export function getHostSessionExecution(runtime: TuiSessionExecutionRegistry | undefined): HostSessionExecution | undefined {
++  if (runtime === undefined) return undefined
++  try {
++    const concrete = concreteService(runtime as object)
++    return concrete instanceof TuiSessionExecutionRuntime ? Object.freeze({ acquire: id => acquire(concrete, id) }) : undefined
++  } catch {
++    return undefined
++  }
++}
+diff --git a/src/dsh-adapter/session-execution.ts b/src/dsh-adapter/session-execution.ts
+new file mode 100644
+index 0000000..02a5ee4
+--- /dev/null
++++ b/src/dsh-adapter/session-execution.ts
+@@ -0,0 +1,53 @@
++/** Public, renderer-free external execution driver contract. */
++import type { Context } from '@deepseek-ai/cordis'
++
++export type SessionExecutionPermissionOutcome = 'allow' | 'deny'
++export const SESSION_EXECUTION_API_VERSION = 1
++/** A detached projection; durable state remains owned by the driver. */
++export interface SessionExecutionRow {
++  readonly id: number
++  readonly kind: 'user' | 'assistant' | 'reasoning' | 'notice' | 'tool'
++  readonly text: string
++  readonly time: number
++  readonly streaming?: boolean
++  readonly tool?: { readonly callId: string; readonly name: string; readonly status: 'running' | 'ok' | 'error'; readonly resultText?: string }
++}
++export type SessionExecutionCommandOutcome =
++  | { readonly kind: 'success'; readonly text: string; readonly consumeDraft: true }
++  | { readonly kind: 'error'; readonly text: string; readonly consumeDraft: boolean }
++export interface SessionExecutionSnapshot {
++  readonly uiSessionId: string
++  readonly executionSessionId: string
++  readonly title: string
++  readonly working: boolean
++  /** Current text projection for initial mount or recovery. */
++  readonly text?: string
++  readonly rows?: readonly SessionExecutionRow[]
++  readonly cwd?: string
++  readonly model?: string
++  readonly draft?: string
++}
++export type SessionExecutionEvent =
++  /** Idle/transition updates have their own monotonic generation, not a fake prompt. */
++  | { readonly type: 'session'; readonly generation: number; readonly snapshot: SessionExecutionSnapshot }
++  | { readonly type: 'snapshot'; readonly turnId: string; readonly snapshot: SessionExecutionSnapshot }
++  | { readonly type: 'text'; readonly turnId: string; readonly delta: string }
++  | { readonly type: 'permission'; readonly turnId: string; readonly requestId: string; readonly title: string }
++export interface SessionExecutionDriver {
++  readonly id: string
++  readonly capabilities: ReadonlySet<'submit' | 'cancel' | 'permission-reply' | 'commands' | 'draft'>
++  readonly commands?: readonly { readonly name: string; readonly description: string }[]
++  command?(name: string, rawInput: string): Promise<SessionExecutionCommandOutcome | undefined>
++  /** Synchronous editor observation; the driver persists through its own queue. */
++  updateDraft?(text: string): void
++  snapshot(): SessionExecutionSnapshot
++  subscribe(listener: (event: SessionExecutionEvent) => void): () => void
++  submit(text: string, turnId: string): boolean
++  cancel(): Promise<void>
++  replyPermission(requestId: string, outcome: SessionExecutionPermissionOutcome): Promise<void>
++  close(): Promise<void>
++}
++export interface TuiSessionExecutionRegistry {
++  register(pluginCtx: Context, driver: SessionExecutionDriver): () => Promise<void>
++}
++declare module '@deepseek-ai/cordis' { interface Context { tuiSessionExecution: TuiSessionExecutionRegistry } }

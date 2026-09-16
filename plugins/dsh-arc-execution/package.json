@@ -1,0 +1,50 @@
+{
+  "name": "dsh-arc-execution",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "ARC execution driver for the experimental public DSH TUI session interface",
+  "engines": {
+    "node": ">=22.20.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./lib/plugins/dsh-arc-execution/src/index.d.ts",
+      "default": "./lib/plugins/dsh-arc-execution/src/index.js"
+    },
+    "./remote-config": {
+      "types": "./lib/tui/src/remote-config.d.ts",
+      "default": "./lib/tui/src/remote-config.js"
+    }
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepack": "npm run build"
+  },
+  "dependencies": {
+    "@agentclientprotocol/sdk": "1.4.0"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "4.0.2",
+    "@deepseek-harness-tui/dsh-tui": "0.10.1-arc.1.0.0"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "@types/node": "24.10.1",
+    "@deepseek-ai/dsh-agent": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-session": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-llm": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-brand": "0.1.5-rc.2"
+  },
+  "license": "MIT"
+}

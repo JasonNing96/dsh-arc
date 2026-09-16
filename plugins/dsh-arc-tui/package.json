@@ -1,0 +1,20 @@
+{
+  "name": "dsh-arc-tui",
+  "version": "1.0.0",
+  "description": "DSH commands and optional TUI status contributions for dsh-arc",
+  "files": [
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "dsh-arc": "1.0.0",
+    "@deepseek-ai/dsh-commands": "0.1.5-rc.2"
+  },
+  "license": "MIT"
+}
