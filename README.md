@@ -9,10 +9,14 @@ archive is about 128 MB; no model weights are included.
 
 ## Native installation
 
+The npm registry upload is pending. Native installation is currently available from
+the [v1.0.0 release archive](https://github.com/JasonNing96/dsh-arc/releases/tag/v1.0.0);
+the Docker image is public.
+
 Requires Node.js 22.20+ on macOS or glibc Linux (arm64/x64). Install with npm:
 
 ```sh
-npm install -g @jasonning/dsh-arc@1.0.0
+npm install -g ./jasonning-dsh-arc-1.0.0.tgz
 dsh-arc --version
 ```
 
