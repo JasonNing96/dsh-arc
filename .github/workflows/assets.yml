@@ -1,0 +1,25 @@
+name: Publish release archive
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '26.5.0'
+      - name: Build and verify the distribution
+        run: |
+          npm ci --prefix distribution/dsh-arc-cli --legacy-peer-deps --ignore-scripts --no-audit --no-fund
+          npm test --prefix distribution/dsh-arc-cli
+          python3 tools/prepare-arc-native.py
+          mkdir -p artifacts
+          python3 tools/pack-arc-release.py artifacts
+          (cd artifacts && sha256sum jasonning-dsh-arc-1.0.0.tgz > SHA256SUMS)
+      - name: Upload release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload v1.0.0 artifacts/jasonning-dsh-arc-1.0.0.tgz artifacts/SHA256SUMS --clobber
