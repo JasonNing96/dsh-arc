@@ -1,4 +1,7 @@
 FROM node:26.5.0-bookworm-slim
+LABEL org.opencontainers.image.source="https://github.com/JasonNing96/dsh-arc"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.version="1.0.0"
 RUN apt-get -o Acquire::Retries=3 update \
     && apt-get -o Acquire::Retries=3 install -y --no-install-recommends ca-certificates \
     && sed -i 's|http://deb.debian.org|https://deb.debian.org|g' /etc/apt/sources.list.d/debian.sources \
