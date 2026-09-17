@@ -10,8 +10,8 @@ tools and workspace.
 ```mermaid
 flowchart TB
   U["You · Terminal TUI"] --> ARC["ARC · Keep the conversation<br/>Choose where it runs"]
-  ARC <-->|"Local connection"| L["Computer runtime"]
-  ARC <-->|"SSH connection"| R["Server runtime<br/>Native or Docker"]
+  ARC -->|"Local connection"| L["Computer runtime"]
+  ARC -->|"SSH connection"| R["Server runtime<br/>Native or Docker"]
   L --> LM["Local model configuration<br/>Tools and workspace"]
   R --> RM["Server model configuration<br/>Tools and workspace"]
 ```
