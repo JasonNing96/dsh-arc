@@ -1,0 +1,13 @@
+flowchart TB
+  subgraph UI["工作台 Profile：arc-ui；配套 TUI 0.10.1-arc.1.0.0"]
+    T["TUI 编辑器与流式展示"] --> PORT["通用会话执行接口"]
+    PORT --> N["默认原生驱动（未启用 ARC）"]
+    PORT -->|"driverId: arc"| D["可选 dsh-arc-execution"]
+    D --> C["ArcController + StateStore：逻辑会话、Home、草稿、提交"]
+  end
+  subgraph RT["两个独立 runtime Profile：本地与远端 arc-runtime"]
+    ACP["标准 ACP + dsh-arc-acp"] --> CORE["dsh-arc：ctx.arc"]
+    CORE -->|"检查点导出与导入"| S["原生 Agent / Session / Tools"]
+    ACP -->|"普通对话与工具权限"| S
+  end
+  C <-->|"本地 stdio / SSH stdio"| ACP

@@ -1,0 +1,821 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DSH ARC · 设计总稿 v1.0</title>
+<style>
+:root{--ink:#172840;--muted:#5c6d82;--blue:#315bd6;--line:#dce4ef;--teal:#087f83;--paper:#fff;scroll-behavior:smooth}
+*{box-sizing:border-box}body{margin:0;color:var(--ink);background:#eef2f7;font:17px/1.85 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}code{font: .87em/1.7 "SFMono-Regular",Consolas,monospace;background:#f0f3f8;border-radius:4px;padding:2px 5px;overflow-wrap:anywhere}pre{padding:22px;background:#f3f6fb;border:1px solid var(--line);border-radius:9px;overflow:auto;line-height:1.7}pre code{padding:0;background:none;white-space:pre;overflow-wrap:normal}
+nav{position:fixed;top:0;bottom:0;left:0;width:236px;padding:32px 24px;overflow:auto;background:#f8fafd;border-right:1px solid var(--line);font-size:13px}nav strong{display:block;font-size:21px;margin-bottom:5px}nav small{color:var(--muted)}nav .toc{margin-top:26px}nav a{display:block;color:#40536b;padding:8px 0;line-height:1.5}
+main{margin:36px 32px 80px 272px;max-width:1360px;background:var(--paper);box-shadow:0 10px 40px #142b4810;border-radius:16px;overflow:hidden}.cover{background:#12243d;color:white;padding:58px 58px 48px}.eyebrow{font-size:12px;letter-spacing:2.2px;color:#94b1d9}.cover h1{font-size:62px;line-height:1.15;margin:16px 0 0;letter-spacing:-1.5px}.cover .english{font-size:19px;color:#b6c9e2;margin:8px 0 25px}.cover .lead{font-size:27px;font-weight:500;line-height:1.55;margin:0}.chips{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px}.chips span{border:1px solid #49617f;padding:5px 12px;font-size:12px;border-radius:5px;color:#dce9fa}.meta{padding:20px 58px;background:#f3f7fc;color:var(--muted);border-bottom:1px solid var(--line);font-size:14px}.content{padding:10px 58px 46px}
+h2{font-size:29px;line-height:1.45;margin:55px 0 24px;padding-top:18px;border-top:2px solid #e4eaf3;scroll-margin-top:22px}h3{font-size:21px;margin:34px 0 15px}p{margin:16px 0}strong{font-weight:650}blockquote{margin:20px 0;padding:12px 22px;border-left:4px solid var(--teal);background:#f1f8f7}ol,ul{padding-left:25px}li{padding-left:5px;margin:9px 0}
+.table-wrap{overflow-x:auto;margin:24px 0}table{border-collapse:collapse;width:100%;font-size:14px;line-height:1.75}th,td{border-bottom:1px solid var(--line);text-align:left;vertical-align:top;padding:13px 15px}th{background:#edf2f9;color:#274163;font-weight:650}tr:nth-child(even) td{background:#fafbfd}td:first-child{min-width:130px}td code{font-size:12px}figure{margin:26px -24px 30px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff;break-inside:avoid}.diagram{overflow-x:auto}.diagram svg{display:block;width:100%;height:auto;min-width:780px}figcaption{padding:12px 24px;background:#f5f8fc;color:var(--muted);font-size:13px;border-top:1px solid var(--line)}details{padding:12px 24px;font-size:13px;background:#fafcfe}summary{cursor:pointer;color:#627087}details pre{font-size:12px}.source{font-size:12px;vertical-align:super;margin-left:2px}.footer{padding:25px 58px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
+@media(min-width:1920px){main{margin-left:auto;margin-right:auto;transform:translateX(100px)}}
+@media(max-width:1450px){nav{display:none}main{margin:24px auto 60px;width:calc(100% - 48px);max-width:1330px}.content{padding:10px 44px 40px}.cover{padding:46px}.meta,.footer{padding-left:46px;padding-right:46px}}
+@media(max-width:700px){body{font-size:16px}main{width:100%;margin:0;border-radius:0}.cover{padding:34px 24px}.cover h1{font-size:48px}.cover .lead{font-size:23px}.content{padding:4px 23px 30px}.meta,.footer{padding:17px 24px}h2{font-size:25px}figure{margin-left:-12px;margin-right:-12px}.table-wrap{margin-right:-10px}}
+@media print{body{background:#fff;font-size:11pt}nav,details{display:none}main{margin:0;width:100%;max-width:none;box-shadow:none;transform:none!important}.cover{padding:28px;color:#172840;background:#eef3fb;break-after:avoid}.cover h1{font-size:38px}.cover .english,.cover .eyebrow{color:#526780}.cover .lead{font-size:20px}.chips{display:none}.content{padding:0 20px}.meta,.footer{padding:14px 20px}h2{font-size:20px;break-after:avoid;margin-top:28px}h3{break-after:avoid}.diagram svg{min-width:0}figure{margin:15px 0;break-inside:avoid}table{font-size:9pt}.table-wrap{overflow:visible}tr{break-inside:avoid}a{color:inherit}.source{font-size:8pt}}
+</style></head><body>
+<nav><strong>DSH ARC</strong><small>设计总稿 · v1.0<br>2026-09-17</small><div class="toc"><a href="#section-1">1. 产品为什么需要 ARC</a>
+<a href="#section-2">2. 五个必须分开的概念</a>
+<a href="#section-3">3. v1.0 控制面与数据面</a>
+<a href="#section-4">4. 一次投切如何完成</a>
+<a href="#section-5">5. 插件如何组装，哪些还需要适配</a>
+<a href="#section-6">6. 安装与运行数据的组织</a>
+<a href="#section-7">7. 目标架构：多端协同，一个会话</a>
+<a href="#section-8">8. Home、最小信息交付与审计</a>
+<a href="#section-9">9. 开放研究：异构模型间的信息状态</a>
+<a href="#section-10">10. 设计取舍与实现边界</a>
+<a href="#section-11">11. 当前验收与下一阶段入口</a></div><a href="design.md">Markdown 原稿 ↗</a></nav>
+<main><header class="cover"><div class="eyebrow">ARCHITECTURE NOTE / 2026.09</div><h1>DSH ARC</h1><p class="english">Agent Relay Control</p><p class="lead">工作有归属，执行可接力。<br>多个独立 runtime，延续同一个会话。</p><div class="chips"><span>小核心 · 明确边界</span><span>控制面 / 数据面</span><span>可选插件 · 独立运行时</span><span>5 张架构图</span></div></header>
+<div class="meta">产品与架构评审稿 · 源码与既有验收整合 · 已实现、后续目标、开放研究分别标注<br>本页内嵌全部矢量图，无需 Figma 权限或在线图表服务即可阅读。</div>
+<article class="content"><blockquote>
+<p>Agent Relay Control · v1.0 设计基线 · 2026-09-17</p>
+<p>工作有归属，执行可接力。多个独立 runtime，延续同一个会话。</p>
+<p>本文整合早期三端 PRD、端云接力讨论、Home Runtime 设计、插件验证与 TUI 迁移结果，并以 v1.0 源码修正历史状态。它是架构参考，后续目标不是本版功能承诺。</p>
+</blockquote>
+<h2 id="section-1">1. 产品为什么需要 ARC</h2>
+<p>DSH ARC 面向 FDE、个人开发者和日常工作人员，是单用户、可组装的工作台。长期希望形成类似 Obsidian 的开放生态：核心可以独立使用，界面、工具和工作流可以替换，个人云是可选服务。</p>
+<p>电脑、手机和云有不同的能力。电脑能访问用户授权的本地工作区和应用，手机未来可以提供拍照等现场信息，云适合承接远程计算与较长任务。它们应各自拥有独立 runtime，而不是把所有设备都视为同一个云 Agent 的遥控器。</p>
+<p>ARC 负责组织这些 runtime 如何延续工作。DSH 继续负责 Agent、模型调用、工具和原生会话。我们关心的是执行归属与信息连续性，不要求用户把所有能力迁入一套封闭工作台。</p>
+<p>早期提出的个人云约 $5/月是商业设想，尚未形成可购买服务、定价承诺或无限模型/算力额度。本版交付本地 TUI 与自管服务器接入，不包含移动客户端和托管云平台。</p>
+<h2 id="section-2">2. 五个必须分开的概念</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>概念</th>
+<th>回答的问题</th>
+<th>v1.0 的表达</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>交互端</td>
+<td>用户在哪里输入、查看？</td>
+<td>电脑 Terminal 中的 TUI</td>
+</tr>
+<tr>
+<td>Home Runtime</td>
+<td>当前工作归属于谁？</td>
+<td>逻辑会话的 Home 元数据，投切时保留；当前新会话从本地开始</td>
+</tr>
+<tr>
+<td>执行端</td>
+<td>谁执行下一次工具调用？</td>
+<td>当前选中的本地或远程 DSH runtime</td>
+</tr>
+<tr>
+<td>推理位置</td>
+<td>哪个模型在哪里处理输入？</td>
+<td>各 runtime 独立的 provider/model 配置</td>
+</tr>
+<tr>
+<td>数据保留与出站策略</td>
+<td>什么可以交付、保存给谁？</td>
+<td>各端持久化已有实现；细粒度出站策略与云同步开关尚未实现</td>
+</tr>
+</tbody></table></div>
+<p><strong>Home 是工作归属信息，目前不是权限执行器。</strong> 本地 runtime 调用在线模型时，输入仍会发往模型服务；Home 在本地不能自动保证数据不出设备。</p>
+<p>一个逻辑 <code>conversationId</code> 可以对应多个原生 <code>sessionId</code>。前者维持用户看到的工作连续性；后者属于具体 runtime 的原生持久化。投切时目标创建新的 session，逻辑会话、Home 与草稿继续保留。</p>
+<p>还要区分三种操作：</p>
+<ul>
+<li><strong>模型切换</strong>：改变推理服务，不必改变工具执行位置。</li>
+<li><strong>执行投切</strong>：v1.0 在空闲边界把当前会话的后续执行交给另一端，Home 不变。</li>
+<li><strong>子任务委派</strong>：主任务留在 Home，只把限定任务与材料交给协作端；这是后续设计。</li>
+</ul>
+<p>主任务 Home 迁移、并行多端写入和自动调度同样未包含在当前投切协议中。</p>
+<h2 id="section-3">3. v1.0 控制面与数据面</h2>
+<figure id="01-current-runtime"><div class="diagram"><svg xmlns="http://www.w3.org/2000/svg" width="1280" height="900" viewBox="0 0 1280 900" role="img" aria-labelledby="01-current-runtime-title">
+<title id="01-current-runtime-title">01  当前运行架构｜工作台控制，两端执行</title>
+<style>text{font-family:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;fill:#1b2b45} .small{fill:#617088}</style>
+<rect width="1280" height="100%" fill="#fff"/>
+<defs>
+<marker id="01-current-runtime-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#315bd6"/></marker>
+<marker id="01-current-runtime-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#087f83"/></marker>
+<marker id="01-current-runtime-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#66758d"/></marker>
+<marker id="01-current-runtime-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7c55bb"/></marker>
+</defs>
+<text x="30" y="40" font-size="24" font-weight="650" text-anchor="start">01  当前运行架构｜工作台控制，两端执行</text>
+<text x="30" y="69" font-size="15" font-weight="400" text-anchor="start" style="fill:#617088">v1.0 已验收 · TUI 执行驱动组织控制面；ACP 承载消息、事件和检查点，各端独立执行</text>
+<rect x="30" y="96" width="1220" height="235" rx="16" fill="#f8fafd" stroke="#ced8e8" stroke-width="1.5"/>
+<text x="50" y="125" font-size="18" font-weight="600" text-anchor="start">电脑 · 工作台进程</text>
+<rect x="60" y="172" width="300" height="105" rx="10" fill="#ffffff" stroke="#ccd5e3" stroke-width="1.4"/>
+<text x="210.0" y="207.5" font-size="18" font-weight="600" text-anchor="middle">TUI 扩展版 + ARC driver</text>
+<text x="210.0" y="230.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">输入与草稿</text>
+<text x="210.0" y="253.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">增量、工具与权限展示</text>
+<rect x="470" y="172" width="320" height="105" rx="10" fill="#eef3ff" stroke="#9eb6f1" stroke-width="1.4"/>
+<text x="630.0" y="207.5" font-size="18" font-weight="600" text-anchor="middle">ArcController</text>
+<text x="630.0" y="230.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">当前执行端 / 投切事务</text>
+<text x="630.0" y="253.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">逻辑 conversationId / Home</text>
+<rect x="925" y="172" width="290" height="105" rx="10" fill="#eaf8f6" stroke="#8ecdc6" stroke-width="1.4"/>
+<text x="1070.0" y="207.5" font-size="18" font-weight="600" text-anchor="middle">StateStore</text>
+<text x="1070.0" y="230.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">会话镜像与草稿</text>
+<text x="1070.0" y="253.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">活动指针 active.json</text>
+<path d="M 360 225 L 470 225" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-current-runtime-blue)"/>
+<rect x="370.1" y="198" width="89.8" height="21" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="415" y="210" font-size="13" font-weight="400" text-anchor="middle" style="fill:#315bd6">投切 / 绑定</text>
+<path d="M 790 225 L 925 225" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-current-runtime-teal)"/>
+<rect x="829.0" y="197" width="58.0" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="858" y="210" font-size="14" font-weight="400" text-anchor="middle" style="fill:#315bd6">持久化</text>
+<rect x="30" y="435" width="590" height="397" rx="16" fill="#f8fafd" stroke="#ced8e8" stroke-width="1.5"/>
+<text x="50" y="464" font-size="18" font-weight="600" text-anchor="start">电脑 · 本地 DSH runtime</text>
+<rect x="660" y="435" width="590" height="397" rx="16" fill="#f8fafd" stroke="#ced8e8" stroke-width="1.5"/>
+<text x="680" y="464" font-size="18" font-weight="600" text-anchor="start">服务器 · DSH runtime</text>
+<rect x="60" y="500" width="530" height="68" rx="10" fill="#ffffff" stroke="#ccd5e3" stroke-width="1.4"/>
+<text x="325.0" y="528.5" font-size="18" font-weight="600" text-anchor="middle">标准 ACP + dsh-arc-acp</text>
+<text x="325.0" y="551.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">对话、取消、权限、ARC 扩展</text>
+<rect x="60" y="645" width="205" height="84" rx="10" fill="#eaf8f6" stroke="#8ecdc6" stroke-width="1.4"/>
+<text x="162.5" y="681.5" font-size="18" font-weight="600" text-anchor="middle">dsh-arc</text>
+<text x="162.5" y="704.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">ctx.arc · 检查点</text>
+<rect x="345" y="645" width="245" height="84" rx="10" fill="#eef3ff" stroke="#9eb6f1" stroke-width="1.4"/>
+<text x="467.5" y="681.5" font-size="18" font-weight="600" text-anchor="middle">本地 Agent / Session</text>
+<text x="467.5" y="704.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">原生持久化</text>
+<rect x="60" y="771" width="530" height="42" rx="10" fill="#f4f6fa" stroke="#d9e0ea" stroke-width="1.4"/>
+<text x="325.0" y="798.0" font-size="18" font-weight="600" text-anchor="middle">本地工具 / 工作区 / 模型路由</text>
+<path d="M 155 568 L 155 645" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-current-runtime-teal)"/>
+<rect x="126.0" y="598" width="58.0" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="155" y="611" font-size="14" font-weight="400" text-anchor="middle" style="fill:#315bd6">检查点</text>
+<path d="M 471 568 L 471 645" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-current-runtime-blue)"/>
+<rect x="409.2" y="598" width="123.5" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="471" y="611" font-size="14" font-weight="400" text-anchor="middle" style="fill:#315bd6">普通对话 / 授权</text>
+<path d="M 265 688 L 345 688" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-current-runtime-teal)"/>
+<rect x="262.9" y="661" width="84.2" height="20" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="305" y="672" font-size="12" font-weight="400" text-anchor="middle" style="fill:#315bd6">导出 / 暂存</text>
+<path d="M 470 729 L 470 771" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-current-runtime-blue)"/>
+<rect x="690" y="500" width="530" height="68" rx="10" fill="#ffffff" stroke="#ccd5e3" stroke-width="1.4"/>
+<text x="955.0" y="528.5" font-size="18" font-weight="600" text-anchor="middle">标准 ACP + dsh-arc-acp</text>
+<text x="955.0" y="551.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">对话、取消、权限、ARC 扩展</text>
+<rect x="690" y="645" width="205" height="84" rx="10" fill="#eaf8f6" stroke="#8ecdc6" stroke-width="1.4"/>
+<text x="792.5" y="681.5" font-size="18" font-weight="600" text-anchor="middle">dsh-arc</text>
+<text x="792.5" y="704.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">ctx.arc · 检查点</text>
+<rect x="975" y="645" width="245" height="84" rx="10" fill="#eef3ff" stroke="#9eb6f1" stroke-width="1.4"/>
+<text x="1097.5" y="681.5" font-size="18" font-weight="600" text-anchor="middle">服务器 Agent / Session</text>
+<text x="1097.5" y="704.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">原生持久化</text>
+<rect x="690" y="771" width="530" height="42" rx="10" fill="#f4f6fa" stroke="#d9e0ea" stroke-width="1.4"/>
+<text x="955.0" y="798.0" font-size="18" font-weight="600" text-anchor="middle">服务器工具 / 工作区 / 模型路由</text>
+<path d="M 785 568 L 785 645" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-current-runtime-teal)"/>
+<rect x="756.0" y="598" width="58.0" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="785" y="611" font-size="14" font-weight="400" text-anchor="middle" style="fill:#315bd6">检查点</text>
+<path d="M 1101 568 L 1101 645" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-current-runtime-blue)"/>
+<rect x="1039.2" y="598" width="123.5" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="1101" y="611" font-size="14" font-weight="400" text-anchor="middle" style="fill:#315bd6">普通对话 / 授权</text>
+<path d="M 895 688 L 975 688" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-current-runtime-teal)"/>
+<rect x="892.9" y="661" width="84.2" height="20" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="935" y="672" font-size="12" font-weight="400" text-anchor="middle" style="fill:#315bd6">导出 / 暂存</text>
+<path d="M 1100 729 L 1100 771" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-current-runtime-blue)"/>
+<path d="M 535 277 L 535 375 L 325 375 L 325 500" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-current-runtime-blue)" marker-start="url(#01-current-runtime-blue)"/>
+<rect x="239.4" y="358" width="185.1" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="332" y="371" font-size="14" font-weight="400" text-anchor="middle" style="fill:#315bd6">AcpClient · 本地 stdio</text>
+<path d="M 725 277 L 725 375 L 955 375 L 955 500" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-current-runtime-blue)" marker-start="url(#01-current-runtime-blue)"/>
+<rect x="870.7" y="358" width="180.6" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="961" y="371" font-size="14" font-weight="400" text-anchor="middle" style="fill:#315bd6">AcpClient · SSH stdio</text>
+<text x="35" y="866" font-size="16" font-weight="400" text-anchor="start" style="fill:#617088">请求与事件复用 ACP 连接；检查点经工作台中转。两端没有后台全量同步链路。</text>
+</svg></div><figcaption>v1.0 当前运行架构：工作台控制，两端独立执行 · <a href="diagrams/01-current-runtime.svg">SVG</a> · <a href="diagrams/01-current-runtime.mmd">Mermaid</a></figcaption><details><summary>可编辑连线源码</summary><pre><code>flowchart TB
+  subgraph W[&quot;电脑 · 工作台进程&quot;]
+    UI[&quot;TUI 扩展版 + ARC driver：输入、草稿、增量展示&quot;]
+    CTRL[&quot;ArcController：执行端选择与投切提交&quot;]
+    STORE[&quot;StateStore：会话镜像、草稿、活动索引&quot;]
+    UI --&gt;|&quot;投切 / 重连 / 端点绑定&quot;| CTRL
+    CTRL --&gt;|&quot;持久化逻辑会话、Home、当前端&quot;| STORE
+  end
+  subgraph L[&quot;电脑 · 独立 DSH runtime&quot;]
+    LACP[&quot;标准 ACP + dsh-arc-acp&quot;]
+    LARC[&quot;dsh-arc：ctx.arc&quot;]
+    LAG[&quot;本地 Agent / Session / Persistence&quot;]
+    LENV[&quot;本地工具、工作区、模型路由&quot;]
+    LACP --&gt;|&quot;普通对话 / 权限交互&quot;| LAG
+    LACP --&gt;|&quot;检查点请求&quot;| LARC
+    LARC --&gt;|&quot;导出 / 暂存&quot;| LAG
+    LAG --&gt; LENV
+  end
+  subgraph R[&quot;服务器 · 独立 DSH runtime&quot;]
+    RACP[&quot;标准 ACP + dsh-arc-acp&quot;]
+    RARC[&quot;dsh-arc：ctx.arc&quot;]
+    RAG[&quot;服务器 Agent / Session / Persistence&quot;]
+    RENV[&quot;服务器工具、工作区、模型路由&quot;]
+    RACP --&gt;|&quot;普通对话 / 权限交互&quot;| RAG
+    RACP --&gt;|&quot;检查点请求&quot;| RARC
+    RARC --&gt;|&quot;导出 / 暂存&quot;| RAG
+    RAG --&gt; RENV
+  end
+  CTRL &lt;--&gt;|&quot;AcpClient · 本地 stdio&quot;| LACP
+  CTRL &lt;--&gt;|&quot;AcpClient · SSH stdio&quot;| RACP
+</code></pre></details></figure>
+
+
+
+<p><a href="diagrams/01-current-runtime.mmd">编辑图 1 的 Mermaid 源码</a></p>
+<p><strong>控制面</strong>处理运行端选择、能力检查、会话映射、取消、重连和投切提交。它的入口在 TUI，核心流程由 ARC driver 与 <code>ArcController</code> 组织。</p>
+<p><strong>数据面</strong>承载 prompt、流式回复、工具/权限事件和对话检查点。两者是职责划分，当前共用 ACP 连接，不是两套独立部署的服务。模型请求从各 runtime 发出；工具操作发生在各自工作区。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>层次</th>
+<th>组件</th>
+<th>责任</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>界面</td>
+<td>配套 TUI <code>0.10.1-arc.1.0.0</code></td>
+<td>输入、流式展示、权限交互、快捷键</td>
+</tr>
+<tr>
+<td>工作台扩展</td>
+<td><code>dsh-arc-execution</code></td>
+<td>注册 ARC 执行驱动，提供命令与状态</td>
+</tr>
+<tr>
+<td>控制器</td>
+<td><code>ArcController</code>、<code>StateStore</code></td>
+<td>会话映射、草稿、持久活动指针、投切与恢复</td>
+</tr>
+<tr>
+<td>传输</td>
+<td><code>AcpClient</code></td>
+<td>本地子进程 stdio；远端 SSH stdio；Docker 复用 SSH</td>
+</tr>
+<tr>
+<td>Runtime 扩展</td>
+<td><code>dsh-arc</code> + <code>dsh-arc-acp</code></td>
+<td>检查点导出、校验、导入与 ACP 扩展</td>
+</tr>
+<tr>
+<td>原生内核</td>
+<td>DSH Agent / Session / Tools / Provider</td>
+<td>推理循环、工具、权限、原生会话持久化</td>
+</tr>
+</tbody></table></div>
+<p>两端之间没有后台全量同步链路。检查点由工作台从源端读取，再交给目标端。本版的云端会话保存是远端 runtime 自己的持久化，不等于已经实现独立云同步服务。</p>
+<p>代码入口：<a href="../tui/src/arc-controller.ts">控制器</a>、<a href="../tui/src/state-store.ts">存储</a>、<a href="../tui/src/acp-client.ts">ACP 客户端</a>、<a href="../plugins/dsh-arc/src/index.ts">ARC 服务</a>。</p>
+<h2 id="section-4">4. 一次投切如何完成</h2>
+<figure id="02-handoff-sequence"><div class="diagram"><svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1090" viewBox="0 0 1280 1090" role="img" aria-labelledby="02-handoff-sequence-title">
+<title id="02-handoff-sequence-title">02  投切时序｜准备目标后，再提交可见执行端</title>
+<style>text{font-family:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;fill:#1b2b45} .small{fill:#617088}</style>
+<rect width="1280" height="100%" fill="#fff"/>
+<defs>
+<marker id="02-handoff-sequence-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#315bd6"/></marker>
+<marker id="02-handoff-sequence-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#087f83"/></marker>
+<marker id="02-handoff-sequence-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#66758d"/></marker>
+<marker id="02-handoff-sequence-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7c55bb"/></marker>
+</defs>
+<text x="30" y="40" font-size="24" font-weight="650" text-anchor="start">02  投切时序｜准备目标后，再提交可见执行端</text>
+<text x="30" y="69" font-size="15" font-weight="400" text-anchor="start" style="fill:#617088">实现路径 · 同一逻辑会话与 Home 保留；目标使用新的原生 session</text>
+<rect x="25" y="100" width="180" height="58" rx="10" fill="#ffffff" stroke="#ccd5e3" stroke-width="1.4"/>
+<text x="115.0" y="135.0" font-size="18" font-weight="600" text-anchor="middle">TUI / 用户</text>
+<path d="M 115 158 L 115 983" stroke="#cbd5e4" stroke-width="1.5" stroke-dasharray="5 5"/>
+<rect x="275" y="100" width="180" height="58" rx="10" fill="#eef3ff" stroke="#9eb6f1" stroke-width="1.4"/>
+<text x="365.0" y="135.0" font-size="18" font-weight="600" text-anchor="middle">ARC 控制器</text>
+<path d="M 365 158 L 365 983" stroke="#cbd5e4" stroke-width="1.5" stroke-dasharray="5 5"/>
+<rect x="525" y="100" width="180" height="58" rx="10" fill="#ffffff" stroke="#ccd5e3" stroke-width="1.4"/>
+<text x="615.0" y="135.0" font-size="18" font-weight="600" text-anchor="middle">源 runtime</text>
+<path d="M 615 158 L 615 983" stroke="#cbd5e4" stroke-width="1.5" stroke-dasharray="5 5"/>
+<rect x="775" y="100" width="180" height="58" rx="10" fill="#ffffff" stroke="#ccd5e3" stroke-width="1.4"/>
+<text x="865.0" y="135.0" font-size="18" font-weight="600" text-anchor="middle">目标 runtime</text>
+<path d="M 865 158 L 865 983" stroke="#cbd5e4" stroke-width="1.5" stroke-dasharray="5 5"/>
+<rect x="1045" y="100" width="180" height="58" rx="10" fill="#ffffff" stroke="#ccd5e3" stroke-width="1.4"/>
+<text x="1135.0" y="135.0" font-size="18" font-weight="600" text-anchor="middle">本地索引</text>
+<path d="M 1135 158 L 1135 983" stroke="#cbd5e4" stroke-width="1.5" stroke-dasharray="5 5"/>
+<path d="M 115 208 L 365 208" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#02-handoff-sequence-blue)"/>
+<rect x="204.0" y="183" width="72.0" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="240.0" y="196" font-size="14" font-weight="400" text-anchor="middle" style="fill:#315bd6">请求投切</text>
+<rect x="235" y="237" width="460" height="55" rx="10" fill="#f4f6fa" stroke="#d9e0ea" stroke-width="1.4"/>
+<text x="465.0" y="270.5" font-size="18" font-weight="600" text-anchor="middle">检查：空闲、无待决权限；保留源端与草稿</text>
+<path d="M 365 340 L 865 340" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#02-handoff-sequence-blue)"/>
+<rect x="530.0" y="315" width="170.0" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="615.0" y="328" font-size="14" font-weight="400" text-anchor="middle" style="fill:#315bd6">连接、初始化与能力检查</text>
+<path d="M 365 408 L 615 408" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#02-handoff-sequence-blue)"/>
+<rect x="419.0" y="383" width="142.0" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="490.0" y="396" font-size="14" font-weight="400" text-anchor="middle" style="fill:#315bd6">请求当前会话检查点</text>
+<path d="M 615 476 L 365 476" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#02-handoff-sequence-teal)"/>
+<rect x="419.0" y="451" width="142.0" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="490.0" y="464" font-size="14" font-weight="400" text-anchor="middle" style="fill:#087f83">持久化屏障后的消息</text>
+<path d="M 365 544 L 865 544" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#02-handoff-sequence-teal)"/>
+<rect x="491.6" y="519" width="246.7" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="615.0" y="532" font-size="14" font-weight="400" text-anchor="middle" style="fill:#087f83">暂存检查点并恢复目标原生 session</text>
+<path d="M 865 612 L 365 612" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#02-handoff-sequence-teal)"/>
+<rect x="500.9" y="587" width="228.2" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="615.0" y="600" font-size="14" font-weight="400" text-anchor="middle" style="fill:#087f83">返回目标 sessionId 与连接状态</text>
+<rect x="235" y="638" width="700" height="55" rx="10" fill="#f4f6fa" stroke="#d9e0ea" stroke-width="1.4"/>
+<text x="585.0" y="671.5" font-size="18" font-weight="600" text-anchor="middle">准备阶段：没有发送新 prompt；用户仍在源端</text>
+<rect x="220" y="718" width="1020" height="78" rx="12" fill="#eaf8f6" stroke="#8ecdc6"/>
+<path d="M 365 765 L 1135 765" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#02-handoff-sequence-teal)"/>
+<rect x="602.0" y="740" width="296.0" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="750.0" y="753" font-size="14" font-weight="400" text-anchor="middle" style="fill:#087f83">保存最终草稿、镜像与活动指针（提交边界）</text>
+<path d="M 365 840 L 115 840" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#02-handoff-sequence-blue)"/>
+<rect x="141.0" y="815" width="198.0" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="240.0" y="828" font-size="14" font-weight="400" text-anchor="middle" style="fill:#315bd6">发布目标端；保留对话与草稿</text>
+<path d="M 115 906 L 365 906" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#02-handoff-sequence-blue)"/>
+<rect x="197.0" y="881" width="86.0" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="240.0" y="894" font-size="14" font-weight="400" text-anchor="middle" style="fill:#315bd6">下一条输入</text>
+<path d="M 365 967 L 865 967" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#02-handoff-sequence-blue)"/>
+<rect x="516.6" y="942" width="196.9" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="615.0" y="955" font-size="14" font-weight="400" text-anchor="middle" style="fill:#315bd6">向已提交的目标发送 prompt</text>
+<rect x="30" y="1009" width="595" height="52" rx="10" fill="#f4f6fa" stroke="#d9e0ea" stroke-width="1.4"/>
+<text x="327.5" y="1041.0" font-size="18" font-weight="600" text-anchor="middle">提交前失败：保留源端</text>
+<rect x="650" y="1009" width="600" height="52" rx="10" fill="#f4f6fa" stroke="#d9e0ea" stroke-width="1.4"/>
+<text x="950.0" y="1041.0" font-size="18" font-weight="600" text-anchor="middle">提交后断连：恢复已提交端，不承诺副作用回滚</text>
+</svg></div><figcaption>投切时序：目标准备成功后提交活动指针 · <a href="diagrams/02-handoff-sequence.svg">SVG</a> · <a href="diagrams/02-handoff-sequence.mmd">Mermaid</a></figcaption><details><summary>可编辑连线源码</summary><pre><code>sequenceDiagram
+  participant U as TUI / 用户
+  participant C as ARC 控制器
+  participant L as 源 runtime
+  participant R as 目标 runtime
+  participant I as 本地活动索引
+  U-&gt;&gt;C: 请求投切
+  Note over U,C: 要求空闲且无待决权限；保留源端与草稿
+  C-&gt;&gt;R: 连接、初始化与能力检查
+  C-&gt;&gt;L: 导出当前 session 检查点
+  L--&gt;&gt;C: 持久化屏障后的模型可见消息
+  C-&gt;&gt;R: 暂存检查点并恢复新原生 session
+  R--&gt;&gt;C: 目标 sessionId 与连接状态
+  Note over C,R: 此时仍未切换可见执行端，也未发送新 prompt
+  C-&gt;&gt;I: 保存最终草稿、镜像和活动指针
+  Note over C,I: 提交边界：活动指针持久化后发布目标端
+  C--&gt;&gt;U: 显示目标端；逻辑会话、Home、草稿延续
+  U-&gt;&gt;C: 发送下一条输入
+  C-&gt;&gt;R: prompt；返回增量、工具与权限事件
+  Note over U,R: 提交前失败：保留源端；提交后断连：按已提交端恢复，不能宣称自动撤销
+</code></pre></details></figure>
+
+
+
+<p><a href="diagrams/02-handoff-sequence.mmd">编辑图 2 的 Mermaid 源码</a></p>
+<p>用户等待当前回复和工具处理结束，输入 <code>/arc switch</code> 或按 Alt+X。系统先保存源端草稿，连接目标并检查能力，再导出检查点、导入目标原生会话，最后持久化活动指针并显示目标端。投切本身不发送新的模型 prompt。</p>
+<p>关键提交点是本地活动指针成功持久化，而不是 SSH 已连接，也不是目标已经分配 session ID。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>情况</th>
+<th>行为边界</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>正在生成、工具调用未闭合或权限待决</td>
+<td>不能把在途工作当作已完成检查点迁移</td>
+</tr>
+<tr>
+<td>目标不可达、能力不匹配、导入失败、准备阶段取消</td>
+<td>不提交目标；保留源端为当前会话，清理本次创建的连接与会话资源</td>
+</tr>
+<tr>
+<td>提交成功后显示或旧连接清理失败</td>
+<td>目标已经生效，不能再声称回滚到源端；保留错误反馈与资源所有权</td>
+</tr>
+<tr>
+<td>已提交端断连</td>
+<td>显示断连状态，以 <code>/arc reconnect</code> 恢复；不盲目重放可能产生副作用的 prompt</td>
+</tr>
+<tr>
+<td>应用关闭</td>
+<td>释放本次连接/进程和锁，保留已持久化会话；不承诺后台任务继续执行</td>
+</tr>
+</tbody></table></div>
+<p>准备失败后的目标可能仍有持久化历史痕迹；资源关闭不等于安全删除远端已经接收的数据。取消也不能撤销已经发生的文件、网络或数据库副作用。</p>
+<h3>检查点携带什么</h3>
+<p>当前格式为 <code>version: 1</code>、<code>sourceCwd</code> 和 <code>messages</code>，大小上限 <strong>2 MiB</strong>。它来自原生会话当前的模型可见消息视图，包含已有压缩/回忆后的结果，不必等于完整事件日志。</p>
+<ul>
+<li>允许的内容包括文本、reasoning 块，以及成对且已完成的工具调用/文本结果记录。</li>
+<li>源端系统消息与指定的环境提示被过滤；目标使用自己的模型配置和工作区规则。</li>
+<li>附件、未完成或不匹配的工具调用、超限检查点会被拒绝。</li>
+<li>导入构造已完成的历史事件，再由原生 ACP 恢复；不会执行历史工具。</li>
+<li>不迁移模型 KV cache、进程内存、运行中的 shell、文件目录、凭据文件或插件私有状态。</li>
+</ul>
+<p><strong>不搬运文件不代表历史消息不含文件内容。</strong> 曾进入对话的邮件正文、工具结果、路径或其他敏感文本，仍可能进入检查点。当前没有“只允许某一封邮件”的资源筛选与出站策略引擎；只有在允许将该会话上下文交给目标端时才应使用本版投切。</p>
+<p>检查点是当前可验证的工程基线，不是最终的信息状态同步算法。实现见 <a href="../plugins/dsh-arc/src/checkpoint.ts">checkpoint.ts</a>。</p>
+<h2 id="section-5">5. 插件如何组装，哪些还需要适配</h2>
+<figure id="03-plugin-assembly"><div class="diagram"><svg xmlns="http://www.w3.org/2000/svg" width="1280" height="980" viewBox="0 0 1280 980" role="img" aria-labelledby="03-plugin-assembly-title">
+<title id="03-plugin-assembly-title">03  插件组装｜界面、执行驱动与 runtime 分层</title>
+<style>text{font-family:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;fill:#1b2b45} .small{fill:#617088}</style>
+<rect width="1280" height="100%" fill="#fff"/>
+<defs>
+<marker id="03-plugin-assembly-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#315bd6"/></marker>
+<marker id="03-plugin-assembly-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#087f83"/></marker>
+<marker id="03-plugin-assembly-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#66758d"/></marker>
+<marker id="03-plugin-assembly-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7c55bb"/></marker>
+</defs>
+<text x="30" y="40" font-size="24" font-weight="650" text-anchor="start">03  插件组装｜界面、执行驱动与 runtime 分层</text>
+<text x="30" y="69" font-size="15" font-weight="400" text-anchor="start" style="fill:#617088">v1.0 已验收 · 配套 TUI 0.10.1-arc.1.0.0 提供执行接口扩展；不代表上游已经接受。</text>
+<rect x="30" y="110" width="1220" height="455" rx="16" fill="#f8fafd" stroke="#ced8e8" stroke-width="1.5"/>
+<text x="50" y="139" font-size="18" font-weight="600" text-anchor="start">工作台 Profile · arc-ui</text>
+<rect x="65" y="220" width="285" height="100" rx="10" fill="#ffffff" stroke="#ccd5e3" stroke-width="1.4"/>
+<text x="207.5" y="253.0" font-size="18" font-weight="600" text-anchor="middle">TUI 编辑与展示</text>
+<text x="207.5" y="276.0" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">Chat / PromptInput</text>
+<text x="207.5" y="299.0" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">流式事件 / 权限交互</text>
+<rect x="480" y="220" width="320" height="100" rx="10" fill="#eef3ff" stroke="#9eb6f1" stroke-width="1.4"/>
+<text x="640.0" y="253.0" font-size="18" font-weight="600" text-anchor="middle">通用会话执行接口</text>
+<text x="640.0" y="276.0" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">提交 / 订阅 / 取消</text>
+<text x="640.0" y="299.0" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">权限 / 快照 / 关闭</text>
+<rect x="930" y="175" width="280" height="76" rx="10" fill="#f4f6fa" stroke="#d9e0ea" stroke-width="1.4"/>
+<text x="1070.0" y="207.5" font-size="18" font-weight="600" text-anchor="middle">默认原生驱动</text>
+<text x="1070.0" y="230.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">未启用 ARC 的路径</text>
+<rect x="915" y="355" width="295" height="90" rx="10" fill="#eaf8f6" stroke="#8ecdc6" stroke-width="1.4"/>
+<text x="1062.5" y="394.5" font-size="18" font-weight="600" text-anchor="middle">dsh-arc-execution</text>
+<text x="1062.5" y="417.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">可选 ARC driver</text>
+<rect x="480" y="440" width="320" height="85" rx="10" fill="#eaf8f6" stroke="#8ecdc6" stroke-width="1.4"/>
+<text x="640.0" y="477.0" font-size="18" font-weight="600" text-anchor="middle">ArcController + StateStore</text>
+<text x="640.0" y="500.0" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">会话映射 / Home / 草稿 / 提交</text>
+<path d="M 350 270 L 480 270" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-plugin-assembly-blue)"/>
+<path d="M 800 242 L 860 242 L 860 213 L 930 213" fill="none" stroke="#66758d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-plugin-assembly-muted)"/>
+<path d="M 800 285 L 855 285 L 855 400 L 915 400" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-plugin-assembly-teal)"/>
+<rect x="874.0" y="293" width="117.9" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="933" y="306" font-size="14" font-weight="400" text-anchor="middle" style="fill:#087f83">driverId: arc</text>
+<path d="M 1060 445 L 1060 483 L 800 483" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-plugin-assembly-teal)"/>
+<rect x="30" y="655" width="1220" height="230" rx="16" fill="#f8fafd" stroke="#ced8e8" stroke-width="1.5"/>
+<text x="50" y="684" font-size="18" font-weight="600" text-anchor="start">两个独立 runtime Profile · arc-runtime（本地、SSH 服务器或容器）</text>
+<rect x="75" y="745" width="310" height="82" rx="10" fill="#ffffff" stroke="#ccd5e3" stroke-width="1.4"/>
+<text x="230.0" y="780.5" font-size="18" font-weight="600" text-anchor="middle">标准 ACP + dsh-arc-acp</text>
+<text x="230.0" y="803.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">对话、权限与 ARC 扩展</text>
+<rect x="485" y="745" width="280" height="82" rx="10" fill="#eaf8f6" stroke="#8ecdc6" stroke-width="1.4"/>
+<text x="625.0" y="780.5" font-size="18" font-weight="600" text-anchor="middle">dsh-arc · ctx.arc</text>
+<text x="625.0" y="803.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">检查点导出 / 校验 / 导入</text>
+<rect x="865" y="745" width="335" height="82" rx="10" fill="#ffffff" stroke="#ccd5e3" stroke-width="1.4"/>
+<text x="1032.5" y="780.5" font-size="18" font-weight="600" text-anchor="middle">DSH Agent / Session / Tools</text>
+<text x="1032.5" y="803.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">各端自己的模型与工作区</text>
+<path d="M 570 525 L 570 610 L 15 610 L 15 786 L 75 786" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-plugin-assembly-blue)" marker-start="url(#03-plugin-assembly-blue)"/>
+<rect x="237.4" y="587" width="185.1" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="330" y="600" font-size="14" font-weight="400" text-anchor="middle" style="fill:#315bd6">本地 stdio / SSH stdio</text>
+<path d="M 385 786 L 485 786" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-plugin-assembly-teal)"/>
+<path d="M 765 786 L 865 786" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-plugin-assembly-teal)"/>
+<path d="M 230 827 L 230 859 L 1030 859 L 1030 827" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-plugin-assembly-blue)"/>
+<rect x="490.4" y="845" width="279.2" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="630" y="858" font-size="14" font-weight="400" text-anchor="middle" style="fill:#315bd6">标准对话、工具与权限仍由原生 DSH 负责</text>
+<text x="35" y="935" font-size="16" font-weight="400" text-anchor="start" style="fill:#617088">普通工具无需依赖 ARC；dsh-arc-tui 是另一种同进程命令集成，不是完整投切的必装组件。</text>
+</svg></div><figcaption>插件组装：TUI 执行接口、ARC driver 与 runtime Bundle · <a href="diagrams/03-plugin-assembly.svg">SVG</a> · <a href="diagrams/03-plugin-assembly.mmd">Mermaid</a></figcaption><details><summary>可编辑连线源码</summary><pre><code>flowchart TB
+  subgraph UI[&quot;工作台 Profile：arc-ui；配套 TUI 0.10.1-arc.1.0.0&quot;]
+    T[&quot;TUI 编辑器与流式展示&quot;] --&gt; PORT[&quot;通用会话执行接口&quot;]
+    PORT --&gt; N[&quot;默认原生驱动（未启用 ARC）&quot;]
+    PORT --&gt;|&quot;driverId: arc&quot;| D[&quot;可选 dsh-arc-execution&quot;]
+    D --&gt; C[&quot;ArcController + StateStore：逻辑会话、Home、草稿、提交&quot;]
+  end
+  subgraph RT[&quot;两个独立 runtime Profile：本地与远端 arc-runtime&quot;]
+    ACP[&quot;标准 ACP + dsh-arc-acp&quot;] --&gt; CORE[&quot;dsh-arc：ctx.arc&quot;]
+    CORE --&gt;|&quot;检查点导出与导入&quot;| S[&quot;原生 Agent / Session / Tools&quot;]
+    ACP --&gt;|&quot;普通对话与工具权限&quot;| S
+  end
+  C &lt;--&gt;|&quot;本地 stdio / SSH stdio&quot;| ACP
+</code></pre></details></figure>
+
+
+
+<p><a href="diagrams/03-plugin-assembly.mmd">编辑图 3 的 Mermaid 源码</a></p>
+<p>DSH 用 Cordis 服务、Bundle 元数据和 Profile 组合工作台。ARC 核心以 <code>ctx.arc</code> 提供能力；集成 Bundle 将能力交给特定消费者，没有复制另一套 Agent 内核。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>组合</th>
+<th>使用位置</th>
+<th>能力与限制</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>dsh-arc</code> + <code>dsh-arc-acp</code></td>
+<td>本地、服务器 runtime Profile</td>
+<td>完整投切所需的检查点与 ACP 扩展</td>
+</tr>
+<tr>
+<td>配套 TUI + <code>dsh-arc-execution</code></td>
+<td>工作台 UI Profile</td>
+<td>通过通用执行接口接入控制器，驱动本地/远端对话</td>
+</tr>
+<tr>
+<td>原版 TUI + <code>dsh-arc</code> + <code>dsh-arc-tui</code></td>
+<td>同进程 Profile，可选组合</td>
+<td>ARC 状态与检查点命令；仅装这组不会获得完整投切</td>
+</tr>
+</tbody></table></div>
+<p><strong>v1.0 的完整 TUI 使用明确标识的接口扩展版。</strong> 配套版本是 <code>0.10.1-arc.1.0.0</code>；不能把 npm 原版 <code>0.10.1</code> 当作同一个包，也不宣称这项扩展已经被上游接受。当前分发路径不依赖加载时源码替换或 monkey patch。</p>
+<p>接口将输入提交、事件订阅、取消、权限回应、状态快照和关闭从 UI 中分开。TUI 保留编辑和渲染；默认原生驱动与 ARC 驱动通过同一宿主契约接入。分发器为 ARC 配置 <code>driverId: arc</code>。</p>
+<h3>其他插件是否需要改写</h3>
+<ul>
+<li>普通工具、模型 provider、DSH 原生持久化插件，若只在各自 runtime 内工作，通常无需依赖 ARC；仍需检查版本、依赖、权限和环境兼容性。</li>
+<li>插件需要在另一个 runtime 使用，应在那个 runtime 单独安装、配置和授权。投切不会自动复制插件或账号状态。</li>
+<li>GUI/TUI 想替换执行后端，需要对应的执行接口或适配器；单纯新增命令和状态栏不足以获得投切能力。</li>
+<li>插件若依赖私有内存状态、后台进程、原生 fork、附件或跨端文件传输，需要显式扩展和验收。驱动未声明支持的能力应拒绝，不能静默降级。</li>
+</ul>
+<p>拔掉 ARC 后，普通 DSH 工具不应承担 ARC 的依赖。卸载驱动前先关闭工作台，并恢复 UI 的默认驱动配置；卸载依赖核心的消费者后再移除核心。关闭 ARC 不代表删除已保留的会话数据。</p>
+<h3>使用分发器组装</h3>
+<p>在本地和服务器分别安装同版发行包、初始化各自模型；命令示例见 <a href="../README.md">README</a>。模型凭据各端分别提供。随后本地执行：</p>
+<pre><code class="language-sh">dsh-arc remote add my-server --workspace /absolute/server/project
+dsh-arc --workspace /absolute/local/project
+</code></pre>
+<p>安装器建立 <code>arc-ui</code> 与 <code>arc-runtime</code> Profile。高级组装入口见 <a href="../plugins/dsh-arc-execution/README.md">执行驱动说明</a>和 <a href="../plugins/dsh-arc-execution/cordis.patch.yml">Bundle 配置</a>。保留用户已有配置时，需注意 DSH patch 中 <code>config</code> 对象的整体替换语义。</p>
+<h2 id="section-6">6. 安装与运行数据的组织</h2>
+<p>源码仓库、安装包和用户数据有不同生命周期。源码目录见 <a href="repository-map.md">仓库导航</a>；分发安装不应把会话或模型凭据写回源码。</p>
+<pre><code class="language-text">ARC_HOME/                      # 默认 ~/.local/share/dsh-arc
+  config.json                  # 安装与模型选择元数据
+  remote.json                  # 可选远端描述
+  ui/                          # 工作台 Profile 与 UI 配置
+  runtime/                     # 本机 runtime Profile、模型设置、原生会话
+  packages/                    # 安装器保留的组件目录
+  state/                       # 逻辑会话映射、镜像、草稿、活动指针和锁
+
+远端 ARC_HOME/                 # 独立的数据目录
+  runtime/                     # 远端自己的模型设置和原生会话
+工作区/                        # 各端独立，投切不镜像它
+</code></pre>
+<p>SSH 提供主机身份校验和加密传输，系统 SSH 保管私钥。非交互连接需要已验证的主机密钥和可用的认证方式；不启用 agent forwarding。只有 SSH 密钥还不够，远端还需要安装 runtime、配置模型和准备可访问工作区。</p>
+<p>Docker 是同一 runtime 的部署方式：通过 SSH 启动 <code>docker run --rm -i --init</code>，不用伪终端，以保持 ACP stdio 完整；持久 <code>/data</code> 保存 runtime 数据，显式挂载的 <code>/workspace</code> 提供工作目录。镜像不含模型凭据，环境文件留在服务器。容器进程随连接使用，v1.0 不提供常驻调度服务。</p>
+<p>升级前关闭使用该 home 的会话并备份数据。<code>dsh-arc upgrade</code> 更新组件链接与 Profile，保留设置、用户 Bundle 和会话。Docker 复用同一 <code>/data</code> 与 UID:GID，单纯镜像版本变更不应改变逻辑会话索引。</p>
+<h2 id="section-7">7. 目标架构：多端协同，一个会话</h2>
+<figure id="04-target-architecture"><div class="diagram"><svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1070" viewBox="0 0 1280 1070" role="img" aria-labelledby="04-target-architecture-title">
+<title id="04-target-architecture-title">04  目标架构｜多端协同，云同步与云执行分离</title>
+<style>text{font-family:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;fill:#1b2b45} .small{fill:#617088}</style>
+<rect width="1280" height="100%" fill="#fff"/>
+<defs>
+<marker id="04-target-architecture-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#315bd6"/></marker>
+<marker id="04-target-architecture-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#087f83"/></marker>
+<marker id="04-target-architecture-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#66758d"/></marker>
+<marker id="04-target-architecture-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7c55bb"/></marker>
+</defs>
+<text x="30" y="40" font-size="24" font-weight="650" text-anchor="start">04  目标架构｜多端协同，云同步与云执行分离</text>
+<text x="30" y="69" font-size="15" font-weight="400" text-anchor="start" style="fill:#617088">目标设计 · 图中的 ARC 协作契约是逻辑接口，不要求部署中央 ARC 服务器。</text>
+<rect x="200" y="107" width="880" height="77" rx="10" fill="#ffffff" stroke="#ccd5e3" stroke-width="1.4"/>
+<text x="640.0" y="140.0" font-size="18" font-weight="600" text-anchor="middle">一个用户 · 电脑 / 手机 / 自定义工作台</text>
+<text x="640.0" y="163.0" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">当前以 TUI 为主；移动入口与多端并发规则后续验证</text>
+<rect x="160" y="263" width="960" height="94" rx="10" fill="#f5effc" stroke="#c6afe5" stroke-width="1.4" stroke-dasharray="6 4"/>
+<text x="640.0" y="304.5" font-size="18" font-weight="600" text-anchor="middle">ARC 协作契约</text>
+<text x="640.0" y="327.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">Home 与承接关系 · 信息交付范围 · 授权检查接入 · 审计关联</text>
+<path d="M 640 184 L 640 263" fill="none" stroke="#7c55bb" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-target-architecture-purple)" stroke-dasharray="7 5"/>
+<rect x="35" y="458" width="370" height="300" rx="16" fill="#f8fafd" stroke="#ced8e8" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text x="55" y="487" font-size="18" font-weight="600" text-anchor="start">电脑 runtime</text>
+<rect x="55" y="531" width="330" height="84" rx="10" fill="#eef3ff" stroke="#9eb6f1" stroke-width="1.4"/>
+<text x="220.0" y="567.5" font-size="18" font-weight="600" text-anchor="middle">可作为 Home</text>
+<text x="220.0" y="590.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">现场信息与本地工具</text>
+<rect x="55" y="675" width="330" height="58" rx="10" fill="#eaf8f6" stroke="#8ecdc6" stroke-width="1.4"/>
+<text x="220.0" y="710.0" font-size="18" font-weight="600" text-anchor="middle">本地或在线模型 provider</text>
+<path d="M 220 615 L 220 675" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-target-architecture-blue)" stroke-dasharray="7 5"/>
+<rect x="455" y="458" width="370" height="300" rx="16" fill="#f8fafd" stroke="#ced8e8" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text x="475" y="487" font-size="18" font-weight="600" text-anchor="start">个人云 runtime</text>
+<rect x="475" y="531" width="330" height="84" rx="10" fill="#eef3ff" stroke="#9eb6f1" stroke-width="1.4"/>
+<text x="640.0" y="567.5" font-size="18" font-weight="600" text-anchor="middle">可作为 Home</text>
+<text x="640.0" y="590.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">承接云端任务</text>
+<rect x="475" y="675" width="330" height="58" rx="10" fill="#eaf8f6" stroke="#8ecdc6" stroke-width="1.4"/>
+<text x="640.0" y="710.0" font-size="18" font-weight="600" text-anchor="middle">云端模型 provider</text>
+<path d="M 640 615 L 640 675" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-target-architecture-blue)" stroke-dasharray="7 5"/>
+<rect x="875" y="458" width="370" height="300" rx="16" fill="#f8fafd" stroke="#ced8e8" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text x="895" y="487" font-size="18" font-weight="600" text-anchor="start">设备 B runtime</text>
+<rect x="895" y="531" width="330" height="84" rx="10" fill="#eef3ff" stroke="#9eb6f1" stroke-width="1.4"/>
+<text x="1060.0" y="579.0" font-size="18" font-weight="600" text-anchor="middle">独立资源授权与查询工具</text>
+<rect x="895" y="675" width="330" height="58" rx="10" fill="#eaf8f6" stroke="#8ecdc6" stroke-width="1.4"/>
+<text x="1060.0" y="710.0" font-size="18" font-weight="600" text-anchor="middle">工程资料 / 数据库</text>
+<path d="M 1060 615 L 1060 675" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-target-architecture-blue)" stroke-dasharray="7 5"/>
+<path d="M 220 357 L 220 531" fill="none" stroke="#7c55bb" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-target-architecture-purple)" stroke-dasharray="7 5"/>
+<rect x="158.2" y="398" width="123.5" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="220" y="411" font-size="14" font-weight="400" text-anchor="middle" style="fill:#7c55bb">投切 / 范围委派</text>
+<path d="M 640 357 L 640 531" fill="none" stroke="#7c55bb" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-target-architecture-purple)" stroke-dasharray="7 5"/>
+<rect x="578.2" y="398" width="123.5" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="640" y="411" font-size="14" font-weight="400" text-anchor="middle" style="fill:#7c55bb">投切 / 范围委派</text>
+<path d="M 1060 357 L 1060 531" fill="none" stroke="#7c55bb" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-target-architecture-purple)" stroke-dasharray="7 5"/>
+<rect x="1010.0" y="398" width="100.0" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="1060" y="411" font-size="14" font-weight="400" text-anchor="middle" style="fill:#7c55bb">受限资源请求</text>
+<rect x="160" y="894" width="960" height="87" rx="10" fill="#eaf8f6" stroke="#8ecdc6" stroke-width="1.4" stroke-dasharray="6 4"/>
+<text x="640.0" y="932.0" font-size="18" font-weight="600" text-anchor="middle">可选同步服务</text>
+<text x="640.0" y="955.0" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">获准对话、工作记录、关键资产与版本；不需要为同步启动 Agent</text>
+<path d="M 120 758 L 120 937 L 160 937" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-target-architecture-teal)" stroke-dasharray="7 5"/>
+<rect x="168.2" y="818" width="123.5" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="230" y="831" font-size="14" font-weight="400" text-anchor="middle" style="fill:#087f83">获准同步 · 电脑</text>
+<path d="M 640 758 L 640 894" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-target-architecture-teal)" stroke-dasharray="7 5"/>
+<rect x="578.2" y="818" width="123.5" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="640" y="831" font-size="14" font-weight="400" text-anchor="middle" style="fill:#087f83">获准同步 · 云端</text>
+<path d="M 1080 145 L 1260 145 L 1260 937 L 1120 937" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-target-architecture-teal)" stroke-dasharray="7 5"/>
+<rect x="1100.0" y="818" width="100.0" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="1150" y="831" font-size="14" font-weight="400" text-anchor="middle" style="fill:#087f83">查看获准内容</text>
+<text x="35" y="1035" font-size="16" font-weight="400" text-anchor="start" style="fill:#617088">同一人的逻辑个人云不等于单个物理进程。Home、执行位置、推理位置与云保留策略分别表达。</text>
+</svg></div><figcaption>目标多端架构：云同步和云执行分别组织 · <a href="diagrams/04-target-architecture.svg">SVG</a> · <a href="diagrams/04-target-architecture.mmd">Mermaid</a></figcaption><details><summary>可编辑连线源码</summary><pre><code>flowchart TB
+  U[&quot;一个用户：电脑 / 手机 / 自定义工作台&quot;]
+  ARC[&quot;ARC 协作契约：Home、承接关系、信息范围、授权与审计关联&quot;]
+  U -.-&gt; ARC
+  L[&quot;电脑 runtime：可作为 Home；本地工具与现场信息&quot;]
+  C[&quot;个人云 runtime：可作为 Home；云端任务与计算&quot;]
+  B[&quot;设备 B runtime：独立资源授权与查询工具&quot;]
+  ARC -.-&gt;|&quot;投切 / 有边界的委派&quot;| L
+  ARC -.-&gt;|&quot;投切 / 有边界的委派&quot;| C
+  ARC -.-&gt;|&quot;受限资源请求&quot;| B
+  LM[&quot;本地或在线模型 provider&quot;]
+  CM[&quot;云端模型 provider&quot;]
+  DB[&quot;工程资料 / 数据库&quot;]
+  L -.-&gt; LM
+  C -.-&gt; CM
+  B -.-&gt; DB
+  SYNC[&quot;可选同步服务：获准对话、工作记录、关键资产与版本&quot;]
+  L -.-&gt;|&quot;按数据策略同步&quot;| SYNC
+  C -.-&gt;|&quot;按数据策略同步&quot;| SYNC
+  U -.-&gt;|&quot;查看获准同步内容&quot;| SYNC
+</code></pre></details></figure>
+
+
+
+<p><a href="diagrams/04-target-architecture.mmd">编辑图 4 的 Mermaid 源码</a></p>
+<p>本节起为后续方向。图中虚线表示目标能力，不是现有部署连线。</p>
+<p>一个人的多个设备关联一个逻辑个人云，不要求云只有一个物理进程，也不要求所有设备间协作都经过中央服务器。Home 可以在本地或云端；切换执行位置与迁移 Home 应分别设计。</p>
+<p>云的两个职责需要解耦：</p>
+<ol>
+<li><strong>保存与同步获准信息</strong>：对话、工作记录、关键资产及版本。同步本身不需要运行 Agent。最初的偏好是新会话默认开启云同步、允许关闭，但保密策略优先；本版尚无此独立服务与开关。</li>
+<li><strong>承接可选执行</strong>：长程、重计算或多 Agent 工作。提交、受理、取消、产物、断连恢复和额度都需要单独定义，不能靠当前 SSH 投切自然推导出来。</li>
+</ol>
+<p>三端核心、身份/设备配对、其他 harness 适配和云服务可以沿接口扩展。产品仍以单用户为中心；未来基础设施的租户隔离不等于加入团队成员管理产品。</p>
+<h2 id="section-8">8. Home、最小信息交付与审计</h2>
+<figure id="05-trust-boundaries"><div class="diagram"><svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1110" viewBox="0 0 1280 1110" role="img" aria-labelledby="05-trust-boundaries-title">
+<title id="05-trust-boundaries-title">05  受限委派｜每个资源边界独立检查</title>
+<style>text{font-family:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;fill:#1b2b45} .small{fill:#617088}</style>
+<rect width="1280" height="100%" fill="#fff"/>
+<defs>
+<marker id="05-trust-boundaries-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#315bd6"/></marker>
+<marker id="05-trust-boundaries-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#087f83"/></marker>
+<marker id="05-trust-boundaries-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#66758d"/></marker>
+<marker id="05-trust-boundaries-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7c55bb"/></marker>
+</defs>
+<text x="30" y="40" font-size="24" font-weight="650" text-anchor="start">05  受限委派｜每个资源边界独立检查</text>
+<text x="30" y="69" font-size="15" font-weight="400" text-anchor="start" style="fill:#617088">目标场景 · 本地邮件工作保持 Home；云只承接获准调研；设备 B 自行决定可返回的信息。</text>
+<rect x="30" y="105" width="380" height="875" rx="16" fill="#f8fafd" stroke="#ced8e8" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text x="50" y="134" font-size="18" font-weight="600" text-anchor="start">本地 · Home 信任边界</text>
+<rect x="450" y="105" width="380" height="875" rx="16" fill="#f8fafd" stroke="#ced8e8" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text x="470" y="134" font-size="18" font-weight="600" text-anchor="start">云 · 协作 runtime 边界</text>
+<rect x="870" y="105" width="380" height="875" rx="16" fill="#f8fafd" stroke="#ced8e8" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text x="890" y="134" font-size="18" font-weight="600" text-anchor="start">设备 B · 资源边界</text>
+<rect x="55" y="188" width="330" height="82" rx="10" fill="#ffffff" stroke="#ccd5e3" stroke-width="1.4"/>
+<text x="220.0" y="223.5" font-size="18" font-weight="600" text-anchor="middle">选定邮件 / 私有背景</text>
+<text x="220.0" y="246.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">登录状态不等于全量读取授权</text>
+<rect x="55" y="350" width="330" height="92" rx="10" fill="#eaf8f6" stroke="#8ecdc6" stroke-width="1.4"/>
+<text x="220.0" y="390.5" font-size="18" font-weight="600" text-anchor="middle">划定子任务与外发材料</text>
+<text x="220.0" y="413.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">限定问题、字段与接收方</text>
+<rect x="475" y="350" width="330" height="92" rx="10" fill="#eef3ff" stroke="#9eb6f1" stroke-width="1.4"/>
+<text x="640.0" y="390.5" font-size="18" font-weight="600" text-anchor="middle">承接范围内调研</text>
+<text x="640.0" y="413.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">保留主任务 Home</text>
+<rect x="475" y="530" width="330" height="82" rx="10" fill="#ffffff" stroke="#ccd5e3" stroke-width="1.4"/>
+<text x="640.0" y="565.5" font-size="18" font-weight="600" text-anchor="middle">获准公开搜索</text>
+<text x="640.0" y="588.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">搜索词也需要出站范围检查</text>
+<rect x="895" y="350" width="330" height="92" rx="10" fill="#f5effc" stroke="#c6afe5" stroke-width="1.4"/>
+<text x="1060.0" y="390.5" font-size="18" font-weight="600" text-anchor="middle">独立授权检查</text>
+<text x="1060.0" y="413.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">任务 / 请求方 / 资源 / 接收方</text>
+<rect x="895" y="530" width="330" height="82" rx="10" fill="#ffffff" stroke="#ccd5e3" stroke-width="1.4"/>
+<text x="1060.0" y="565.5" font-size="18" font-weight="600" text-anchor="middle">工程数据库 / 查询工具</text>
+<text x="1060.0" y="588.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">确定性权限限制实际访问</text>
+<rect x="895" y="698" width="330" height="82" rx="10" fill="#eaf8f6" stroke="#8ecdc6" stroke-width="1.4"/>
+<text x="1060.0" y="733.5" font-size="18" font-weight="600" text-anchor="middle">结果出站检查</text>
+<text x="1060.0" y="756.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">记录获准范围与实际交付对象</text>
+<rect x="475" y="825" width="330" height="92" rx="10" fill="#ffffff" stroke="#ccd5e3" stroke-width="1.4"/>
+<text x="640.0" y="865.5" font-size="18" font-weight="600" text-anchor="middle">调研结果与引用</text>
+<text x="640.0" y="888.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">关联执行记录、返回本地</text>
+<rect x="55" y="825" width="330" height="92" rx="10" fill="#ffffff" stroke="#ccd5e3" stroke-width="1.4"/>
+<text x="220.0" y="865.5" font-size="18" font-weight="600" text-anchor="middle">核对结果，完成本地文书</text>
+<text x="220.0" y="888.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">结合未外发的私有背景</text>
+<path d="M 220 270 L 220 350" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#05-trust-boundaries-blue)"/>
+<path d="M 385 396 L 475 396" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#05-trust-boundaries-teal)"/>
+<rect x="376.5" y="313" width="107.0" height="21" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="430" y="325" font-size="13" font-weight="400" text-anchor="middle" style="fill:#087f83">仅交付获准材料</text>
+<path d="M 640 442 L 640 530" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#05-trust-boundaries-blue)"/>
+<path d="M 640 612 L 640 825" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#05-trust-boundaries-blue)"/>
+<path d="M 735 350 L 735 295 L 1060 295 L 1060 350" fill="none" stroke="#7c55bb" stroke-width="2" stroke-linejoin="round" marker-end="url(#05-trust-boundaries-purple)"/>
+<rect x="856.0" y="272" width="128.0" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="920" y="285" font-size="14" font-weight="400" text-anchor="middle" style="fill:#7c55bb">另行申请工程信息</text>
+<path d="M 1060 442 L 1060 530" fill="none" stroke="#7c55bb" stroke-width="2" stroke-linejoin="round" marker-end="url(#05-trust-boundaries-purple)"/>
+<path d="M 1060 612 L 1060 698" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#05-trust-boundaries-teal)"/>
+<path d="M 895 739 L 840 739 L 840 476 L 735 476 L 735 442" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#05-trust-boundaries-teal)"/>
+<rect x="800.0" y="656" width="68.0" height="21" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="834" y="668" font-size="13" font-weight="400" text-anchor="middle" style="fill:#087f83">获准结果</text>
+<path d="M 475 871 L 385 871" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#05-trust-boundaries-teal)"/>
+<rect x="376.5" y="792" width="107.0" height="21" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="430" y="804" font-size="13" font-weight="400" text-anchor="middle" style="fill:#087f83">回收结果与引用</text>
+<text x="220" y="954" font-size="14" font-weight="400" text-anchor="middle" style="fill:#617088">本地记录：依据 / 交付 / 采用</text>
+<text x="640" y="954" font-size="14" font-weight="400" text-anchor="middle" style="fill:#617088">云端记录：承接 / 工具 / 来源</text>
+<text x="1060" y="954" font-size="14" font-weight="400" text-anchor="middle" style="fill:#617088">B 端记录：访问 / 判断 / 出站</text>
+<rect x="30" y="1004" width="1220" height="72" rx="10" fill="#f4f6fa" stroke="#d9e0ea" stroke-width="1.4"/>
+<text x="640.0" y="1034.5" font-size="18" font-weight="600" text-anchor="middle">读取、处理、外发、保存、转委派分别授权</text>
+<text x="640.0" y="1057.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">Home 权限不自动传给云；多层审计不自动等于防篡改证明</text>
+</svg></div><figcaption>目标信任边界：本地邮件、云端调研与设备 B · <a href="diagrams/05-trust-boundaries.svg">SVG</a> · <a href="diagrams/05-trust-boundaries.mmd">Mermaid</a></figcaption><details><summary>可编辑连线源码</summary><pre><code>flowchart LR
+  subgraph L[&quot;本地信任边界 · Home&quot;]
+    MAIL[&quot;选定邮件 / 私有背景&quot;]
+    SCOPE[&quot;划定子任务与可外发材料&quot;]
+    FINAL[&quot;核对云结果；完成本地文书&quot;]
+    LA[&quot;记录委派依据、实际交付、结果采用&quot;]
+    MAIL --&gt; SCOPE
+    FINAL --&gt; LA
+  end
+  subgraph C[&quot;云端信任边界 · 协作 runtime&quot;]
+    TASK[&quot;承接范围内调研&quot;]
+    SEARCH[&quot;获准的公开搜索&quot;]
+    RESULT[&quot;结果、引用与执行记录&quot;]
+    TASK --&gt; SEARCH
+    SEARCH --&gt; RESULT
+  end
+  subgraph B[&quot;设备 B 信任边界&quot;]
+    GATE[&quot;检查任务、请求方、资源与接收方&quot;]
+    DB[&quot;本地工程数据库 / 查询工具&quot;]
+    OUT[&quot;结果出站检查与审计&quot;]
+    GATE --&gt; DB
+    DB --&gt; OUT
+  end
+  SCOPE --&gt;|&quot;限定问题 + 获准材料&quot;| TASK
+  TASK --&gt;|&quot;另行申请工程信息&quot;| GATE
+  OUT --&gt;|&quot;只返回获准结果&quot;| TASK
+  RESULT --&gt;|&quot;回收子任务产物&quot;| FINAL
+</code></pre></details></figure>
+
+
+
+<p><a href="diagrams/05-trust-boundaries.mmd">编辑图 5 的 Mermaid 源码</a></p>
+<h3>场景 A：本地邮件，云端调研</h3>
+<p>邮件工作归属本地。用户选择邮件和可外发材料，本地只委派公开调研，云端返回来源与结论，本地结合未外发背景完成文书。云不因承接子任务而获得全邮箱权限。模型可读某段内容，也不意味着搜索引擎可以收到整段原文。</p>
+<p>最小原型可以使用选定内容的只读快照。后续再验证按邮件、字段、版本、接收方和有效期限制的读取能力；不提前把快照定成唯一状态表示。</p>
+<h3>场景 B：云端开发，Git 产物回收</h3>
+<p>仓库可以归属云端，也可以留在本地、由云承接局部任务。涉及代码变更时明确基线提交、允许修改范围与返回产物，采用 branch/patch 并在 Home 核对和测试。</p>
+<p>Git 描述文件状态与变更，ARC 描述谁执行和如何交接，两者可以组合。Git 本身不能迁移运行进程、数据库副作用和设备授权；ARC 的检查点也不能代替仓库同步。本稿不把此前竞品观察当作当前能力比较，避免用过期产品结论支撑设计。</p>
+<h3>场景 C：设备 B 的工程资料</h3>
+<p>B 上的独立 runtime 守住工程数据库边界。Home 或云端提出有范围的请求，B 重新检查请求者、任务、资源和接收方，使用确定性的工具/数据库权限限制实际查询，再检查结果出站范围。</p>
+<p>Home 能访问 B，不代表其委派的云端继承这项权限。摘要、参数和推导结论也可能涉密，不能自动放行。Agent 可以理解问题和组织结果，实际边界不能只由提示词承担。</p>
+<h3>候选审计与故障约束</h3>
+<p>Home 记录委派依据和实际交付，协作端记录承接、工具与来源，B 记录访问、判断和出站；通过会话、任务、运行、授权与资产版本关联。避免把涉密正文重复写入全局日志。具体字段、签名和存储方式尚未冻结。</p>
+<p>读取、处理、外发、保存、转委派分别判断。已有效的授权可复用；撤销阻止后续访问，不承诺收回已交付信息。回执丢失不能判定未执行，取消和授权撤销也不是副作用回滚。多层记录提高可追溯性，不自动提供防篡改或“恰好一次执行”保证。</p>
+<h2 id="section-9">9. 开放研究：异构模型间的信息状态</h2>
+<p>模型与 harness 解耦，开源模型优先，同时允许本地与云端混用不同模型，例如本地 Qwen 与在线 GPT。模型名称描述推理服务；Codex 等其他 harness 则需要另外的 runtime 接口适配，不能只换 provider 就宣称接入。但“把消息发过去”只解决了一部分连续性问题：两个模型可能拥有不同上下文容量、工具、记忆机制和可访问证据。</p>
+<p>研究问题是：<strong>在异构模型与不同信任边界之间，如何同步任务所需的信息状态，使接收端可靠延续工作，同时控制信息披露、成本与恢复开销？</strong></p>
+<p>这里不预先选择完整历史、摘要或结构化任务包作为唯一答案，也不承诺迁移模型隐状态。候选信息包括事实与证据、约束、已完成工作、未决问题、依赖、资产版本、时效和权限。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>研究维度</th>
+<th>建议比较</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>表示基线</td>
+<td>获准原始消息、摘要、结构化状态、按需检索、混合方式</td>
+</tr>
+<tr>
+<td>质量</td>
+<td>任务完成率、事实/约束保留、证据正确性、遗漏与重复执行</td>
+</tr>
+<tr>
+<td>边界</td>
+<td>非必要披露、越权请求、衍生信息外泄</td>
+</tr>
+<tr>
+<td>变化与异常</td>
+<td>过期证据、资产冲突、断连、迟到结果、撤权、多级委派</td>
+</tr>
+<tr>
+<td>成本</td>
+<td>传输量、token、时延、恢复代价</td>
+</tr>
+</tbody></table></div>
+<p>先用合成或明确授权的数据建立基线，再讨论算法与论文。指标阈值、研究新颖性和模型组合尚待验证。</p>
+<h2 id="section-10">10. 设计取舍与实现边界</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>决策</th>
+<th>原因</th>
+<th>代价 / 后续问题</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>小核心，使用可选 Bundle</td>
+<td>保持 DSH 可组装能力，普通工具无需认识 ARC</td>
+<td>UI/harness 的执行契约仍需分别适配</td>
+</tr>
+<tr>
+<td>Home 与当前执行端分离</td>
+<td>换设备不应悄悄改变工作归属</td>
+<td>权限与 Home 迁移协议需要后续设计</td>
+</tr>
+<tr>
+<td>空闲检查点交接</td>
+<td>原生会话可落盘、可校验、可恢复</td>
+<td>不支持在途进程或任务迁移；有大小/内容限制</td>
+</tr>
+<tr>
+<td>活动指针为提交边界</td>
+<td>源/目标准备状态与用户可见状态一致</td>
+<td>必须区分提交前失败与提交后故障</td>
+</tr>
+<tr>
+<td>工作区与模型配置各端独立</td>
+<td>复用现有 DSH 和 SSH，降低首版部署复杂度</td>
+<td>不会自动同步代码、依赖或私有插件状态</td>
+</tr>
+<tr>
+<td>明确标识 TUI 接口扩展版</td>
+<td>用通用执行入口消除运行时源码替换</td>
+<td>仍需推动上游接受接口并维护版本兼容</td>
+</tr>
+<tr>
+<td>npm 分发 + Docker</td>
+<td>同一个 runtime 覆盖本机与远端</td>
+<td>完整依赖及多平台原生组件使包约 128 MB</td>
+</tr>
+<tr>
+<td>信息状态同步保留为研究</td>
+<td>避免过早锁死跨模型上下文表示</td>
+<td>当前检查点不提供最小信息交付保证</td>
+</tr>
+</tbody></table></div>
+<h2 id="section-11">11. 当前验收与下一阶段入口</h2>
+<p>v1.0 已有：本地/SSH 两端独立 runtime、流式展示、空闲投切、上下文/草稿/Home 保留、重连、重启恢复、插件分层、原生与 Docker 分发。2026-09-17 用户确认本机手工测试通过；自动化范围和运行平台见 <a href="../VALIDATION.md">VALIDATION</a>。用户确认不扩大为未执行的平台或功能验收。</p>
+<p>尚未实现：多设备同时写入、移动 runtime、托管同步服务、Home 迁移、受限子任务委派、跨端文件/Git 自动同步、细粒度授权与可验证审计、断连后独立长程执行、其他 harness 的通用接入。</p>
+<p>后续工作可以围绕三个具体交付推进，尚未排期：</p>
+<ol>
+<li>完善插件执行契约与版本兼容矩阵，降低新界面的接入成本。</li>
+<li>用“本地选定邮件 → 云端公开调研 → 本地回收结果”验证受限委派，先定义材料范围、接收方、提交与审计，再实现协议。</li>
+<li>为信息状态同步建立独立基准，比较保真、权限和成本，不让研究假设悄悄变成 v1 的隐含承诺。</li>
+</ol>
+<p>新增 PRD 应逐条说明用户目的、前置条件、Home/执行/推理位置、数据范围、正常与异常流程、兼容依赖、验收证据和目标版本；分别标记“已实现”“已确认方向”“候选方案”“开放课题”。历史演变见 <a href="history.md">设计沿革</a>。</p>
+</article>
+<footer class="footer">DSH ARC Design v1.0 · 2026-09-17 · Markdown 为内容原稿，SVG 为离线图形资产。<br>状态是有日期的证据快照；最新迁移结论以项目独立验收记录为准。</footer></main></body></html>

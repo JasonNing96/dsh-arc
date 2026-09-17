@@ -1,0 +1,20 @@
+sequenceDiagram
+  participant U as TUI / 用户
+  participant C as ARC 控制器
+  participant L as 源 runtime
+  participant R as 目标 runtime
+  participant I as 本地活动索引
+  U->>C: 请求投切
+  Note over U,C: 要求空闲且无待决权限；保留源端与草稿
+  C->>R: 连接、初始化与能力检查
+  C->>L: 导出当前 session 检查点
+  L-->>C: 持久化屏障后的模型可见消息
+  C->>R: 暂存检查点并恢复新原生 session
+  R-->>C: 目标 sessionId 与连接状态
+  Note over C,R: 此时仍未切换可见执行端，也未发送新 prompt
+  C->>I: 保存最终草稿、镜像和活动指针
+  Note over C,I: 提交边界：活动指针持久化后发布目标端
+  C-->>U: 显示目标端；逻辑会话、Home、草稿延续
+  U->>C: 发送下一条输入
+  C->>R: prompt；返回增量、工具与权限事件
+  Note over U,R: 提交前失败：保留源端；提交后断连：按已提交端恢复，不能宣称自动撤销

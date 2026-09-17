@@ -23,3 +23,10 @@ These failures were investigated, not counted as passing runs.
 
 No business sessions, model keys, SSH keys, host configuration or private development
 history are included in this public source export.
+
+## Manual acceptance — 2026-09-17
+
+The project owner confirmed the prepared v1.0 local test passed, following the
+local streaming, SSH handoff, context retention and return-to-local checklist.
+This is user-reported manual acceptance, separate from the automated checks above.
+It does not add coverage for untested platforms or future delegation features.

@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1070" viewBox="0 0 1280 1070" role="img" aria-labelledby="04-target-architecture-title">
+<title id="04-target-architecture-title">04  目标架构｜多端协同，云同步与云执行分离</title>
+<style>text{font-family:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;fill:#1b2b45} .small{fill:#617088}</style>
+<rect width="1280" height="100%" fill="#fff"/>
+<defs>
+<marker id="04-target-architecture-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#315bd6"/></marker>
+<marker id="04-target-architecture-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#087f83"/></marker>
+<marker id="04-target-architecture-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#66758d"/></marker>
+<marker id="04-target-architecture-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7c55bb"/></marker>
+</defs>
+<text x="30" y="40" font-size="24" font-weight="650" text-anchor="start">04  目标架构｜多端协同，云同步与云执行分离</text>
+<text x="30" y="69" font-size="15" font-weight="400" text-anchor="start" style="fill:#617088">目标设计 · 图中的 ARC 协作契约是逻辑接口，不要求部署中央 ARC 服务器。</text>
+<rect x="200" y="107" width="880" height="77" rx="10" fill="#ffffff" stroke="#ccd5e3" stroke-width="1.4"/>
+<text x="640.0" y="140.0" font-size="18" font-weight="600" text-anchor="middle">一个用户 · 电脑 / 手机 / 自定义工作台</text>
+<text x="640.0" y="163.0" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">当前以 TUI 为主；移动入口与多端并发规则后续验证</text>
+<rect x="160" y="263" width="960" height="94" rx="10" fill="#f5effc" stroke="#c6afe5" stroke-width="1.4" stroke-dasharray="6 4"/>
+<text x="640.0" y="304.5" font-size="18" font-weight="600" text-anchor="middle">ARC 协作契约</text>
+<text x="640.0" y="327.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">Home 与承接关系 · 信息交付范围 · 授权检查接入 · 审计关联</text>
+<path d="M 640 184 L 640 263" fill="none" stroke="#7c55bb" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-target-architecture-purple)" stroke-dasharray="7 5"/>
+<rect x="35" y="458" width="370" height="300" rx="16" fill="#f8fafd" stroke="#ced8e8" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text x="55" y="487" font-size="18" font-weight="600" text-anchor="start">电脑 runtime</text>
+<rect x="55" y="531" width="330" height="84" rx="10" fill="#eef3ff" stroke="#9eb6f1" stroke-width="1.4"/>
+<text x="220.0" y="567.5" font-size="18" font-weight="600" text-anchor="middle">可作为 Home</text>
+<text x="220.0" y="590.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">现场信息与本地工具</text>
+<rect x="55" y="675" width="330" height="58" rx="10" fill="#eaf8f6" stroke="#8ecdc6" stroke-width="1.4"/>
+<text x="220.0" y="710.0" font-size="18" font-weight="600" text-anchor="middle">本地或在线模型 provider</text>
+<path d="M 220 615 L 220 675" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-target-architecture-blue)" stroke-dasharray="7 5"/>
+<rect x="455" y="458" width="370" height="300" rx="16" fill="#f8fafd" stroke="#ced8e8" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text x="475" y="487" font-size="18" font-weight="600" text-anchor="start">个人云 runtime</text>
+<rect x="475" y="531" width="330" height="84" rx="10" fill="#eef3ff" stroke="#9eb6f1" stroke-width="1.4"/>
+<text x="640.0" y="567.5" font-size="18" font-weight="600" text-anchor="middle">可作为 Home</text>
+<text x="640.0" y="590.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">承接云端任务</text>
+<rect x="475" y="675" width="330" height="58" rx="10" fill="#eaf8f6" stroke="#8ecdc6" stroke-width="1.4"/>
+<text x="640.0" y="710.0" font-size="18" font-weight="600" text-anchor="middle">云端模型 provider</text>
+<path d="M 640 615 L 640 675" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-target-architecture-blue)" stroke-dasharray="7 5"/>
+<rect x="875" y="458" width="370" height="300" rx="16" fill="#f8fafd" stroke="#ced8e8" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text x="895" y="487" font-size="18" font-weight="600" text-anchor="start">设备 B runtime</text>
+<rect x="895" y="531" width="330" height="84" rx="10" fill="#eef3ff" stroke="#9eb6f1" stroke-width="1.4"/>
+<text x="1060.0" y="579.0" font-size="18" font-weight="600" text-anchor="middle">独立资源授权与查询工具</text>
+<rect x="895" y="675" width="330" height="58" rx="10" fill="#eaf8f6" stroke="#8ecdc6" stroke-width="1.4"/>
+<text x="1060.0" y="710.0" font-size="18" font-weight="600" text-anchor="middle">工程资料 / 数据库</text>
+<path d="M 1060 615 L 1060 675" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-target-architecture-blue)" stroke-dasharray="7 5"/>
+<path d="M 220 357 L 220 531" fill="none" stroke="#7c55bb" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-target-architecture-purple)" stroke-dasharray="7 5"/>
+<rect x="158.2" y="398" width="123.5" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="220" y="411" font-size="14" font-weight="400" text-anchor="middle" style="fill:#7c55bb">投切 / 范围委派</text>
+<path d="M 640 357 L 640 531" fill="none" stroke="#7c55bb" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-target-architecture-purple)" stroke-dasharray="7 5"/>
+<rect x="578.2" y="398" width="123.5" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="640" y="411" font-size="14" font-weight="400" text-anchor="middle" style="fill:#7c55bb">投切 / 范围委派</text>
+<path d="M 1060 357 L 1060 531" fill="none" stroke="#7c55bb" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-target-architecture-purple)" stroke-dasharray="7 5"/>
+<rect x="1010.0" y="398" width="100.0" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="1060" y="411" font-size="14" font-weight="400" text-anchor="middle" style="fill:#7c55bb">受限资源请求</text>
+<rect x="160" y="894" width="960" height="87" rx="10" fill="#eaf8f6" stroke="#8ecdc6" stroke-width="1.4" stroke-dasharray="6 4"/>
+<text x="640.0" y="932.0" font-size="18" font-weight="600" text-anchor="middle">可选同步服务</text>
+<text x="640.0" y="955.0" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">获准对话、工作记录、关键资产与版本；不需要为同步启动 Agent</text>
+<path d="M 120 758 L 120 937 L 160 937" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-target-architecture-teal)" stroke-dasharray="7 5"/>
+<rect x="168.2" y="818" width="123.5" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="230" y="831" font-size="14" font-weight="400" text-anchor="middle" style="fill:#087f83">获准同步 · 电脑</text>
+<path d="M 640 758 L 640 894" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-target-architecture-teal)" stroke-dasharray="7 5"/>
+<rect x="578.2" y="818" width="123.5" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="640" y="831" font-size="14" font-weight="400" text-anchor="middle" style="fill:#087f83">获准同步 · 云端</text>
+<path d="M 1080 145 L 1260 145 L 1260 937 L 1120 937" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#04-target-architecture-teal)" stroke-dasharray="7 5"/>
+<rect x="1100.0" y="818" width="100.0" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="1150" y="831" font-size="14" font-weight="400" text-anchor="middle" style="fill:#087f83">查看获准内容</text>
+<text x="35" y="1035" font-size="16" font-weight="400" text-anchor="start" style="fill:#617088">同一人的逻辑个人云不等于单个物理进程。Home、执行位置、推理位置与云保留策略分别表达。</text>
+</svg>

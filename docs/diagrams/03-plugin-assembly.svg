@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="980" viewBox="0 0 1280 980" role="img" aria-labelledby="03-plugin-assembly-title">
+<title id="03-plugin-assembly-title">03  插件组装｜界面、执行驱动与 runtime 分层</title>
+<style>text{font-family:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;fill:#1b2b45} .small{fill:#617088}</style>
+<rect width="1280" height="100%" fill="#fff"/>
+<defs>
+<marker id="03-plugin-assembly-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#315bd6"/></marker>
+<marker id="03-plugin-assembly-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#087f83"/></marker>
+<marker id="03-plugin-assembly-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#66758d"/></marker>
+<marker id="03-plugin-assembly-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7c55bb"/></marker>
+</defs>
+<text x="30" y="40" font-size="24" font-weight="650" text-anchor="start">03  插件组装｜界面、执行驱动与 runtime 分层</text>
+<text x="30" y="69" font-size="15" font-weight="400" text-anchor="start" style="fill:#617088">v1.0 已验收 · 配套 TUI 0.10.1-arc.1.0.0 提供执行接口扩展；不代表上游已经接受。</text>
+<rect x="30" y="110" width="1220" height="455" rx="16" fill="#f8fafd" stroke="#ced8e8" stroke-width="1.5"/>
+<text x="50" y="139" font-size="18" font-weight="600" text-anchor="start">工作台 Profile · arc-ui</text>
+<rect x="65" y="220" width="285" height="100" rx="10" fill="#ffffff" stroke="#ccd5e3" stroke-width="1.4"/>
+<text x="207.5" y="253.0" font-size="18" font-weight="600" text-anchor="middle">TUI 编辑与展示</text>
+<text x="207.5" y="276.0" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">Chat / PromptInput</text>
+<text x="207.5" y="299.0" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">流式事件 / 权限交互</text>
+<rect x="480" y="220" width="320" height="100" rx="10" fill="#eef3ff" stroke="#9eb6f1" stroke-width="1.4"/>
+<text x="640.0" y="253.0" font-size="18" font-weight="600" text-anchor="middle">通用会话执行接口</text>
+<text x="640.0" y="276.0" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">提交 / 订阅 / 取消</text>
+<text x="640.0" y="299.0" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">权限 / 快照 / 关闭</text>
+<rect x="930" y="175" width="280" height="76" rx="10" fill="#f4f6fa" stroke="#d9e0ea" stroke-width="1.4"/>
+<text x="1070.0" y="207.5" font-size="18" font-weight="600" text-anchor="middle">默认原生驱动</text>
+<text x="1070.0" y="230.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">未启用 ARC 的路径</text>
+<rect x="915" y="355" width="295" height="90" rx="10" fill="#eaf8f6" stroke="#8ecdc6" stroke-width="1.4"/>
+<text x="1062.5" y="394.5" font-size="18" font-weight="600" text-anchor="middle">dsh-arc-execution</text>
+<text x="1062.5" y="417.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">可选 ARC driver</text>
+<rect x="480" y="440" width="320" height="85" rx="10" fill="#eaf8f6" stroke="#8ecdc6" stroke-width="1.4"/>
+<text x="640.0" y="477.0" font-size="18" font-weight="600" text-anchor="middle">ArcController + StateStore</text>
+<text x="640.0" y="500.0" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">会话映射 / Home / 草稿 / 提交</text>
+<path d="M 350 270 L 480 270" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-plugin-assembly-blue)"/>
+<path d="M 800 242 L 860 242 L 860 213 L 930 213" fill="none" stroke="#66758d" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-plugin-assembly-muted)"/>
+<path d="M 800 285 L 855 285 L 855 400 L 915 400" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-plugin-assembly-teal)"/>
+<rect x="874.0" y="293" width="117.9" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="933" y="306" font-size="14" font-weight="400" text-anchor="middle" style="fill:#087f83">driverId: arc</text>
+<path d="M 1060 445 L 1060 483 L 800 483" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-plugin-assembly-teal)"/>
+<rect x="30" y="655" width="1220" height="230" rx="16" fill="#f8fafd" stroke="#ced8e8" stroke-width="1.5"/>
+<text x="50" y="684" font-size="18" font-weight="600" text-anchor="start">两个独立 runtime Profile · arc-runtime（本地、SSH 服务器或容器）</text>
+<rect x="75" y="745" width="310" height="82" rx="10" fill="#ffffff" stroke="#ccd5e3" stroke-width="1.4"/>
+<text x="230.0" y="780.5" font-size="18" font-weight="600" text-anchor="middle">标准 ACP + dsh-arc-acp</text>
+<text x="230.0" y="803.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">对话、权限与 ARC 扩展</text>
+<rect x="485" y="745" width="280" height="82" rx="10" fill="#eaf8f6" stroke="#8ecdc6" stroke-width="1.4"/>
+<text x="625.0" y="780.5" font-size="18" font-weight="600" text-anchor="middle">dsh-arc · ctx.arc</text>
+<text x="625.0" y="803.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">检查点导出 / 校验 / 导入</text>
+<rect x="865" y="745" width="335" height="82" rx="10" fill="#ffffff" stroke="#ccd5e3" stroke-width="1.4"/>
+<text x="1032.5" y="780.5" font-size="18" font-weight="600" text-anchor="middle">DSH Agent / Session / Tools</text>
+<text x="1032.5" y="803.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">各端自己的模型与工作区</text>
+<path d="M 570 525 L 570 610 L 15 610 L 15 786 L 75 786" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-plugin-assembly-blue)" marker-start="url(#03-plugin-assembly-blue)"/>
+<rect x="237.4" y="587" width="185.1" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="330" y="600" font-size="14" font-weight="400" text-anchor="middle" style="fill:#315bd6">本地 stdio / SSH stdio</text>
+<path d="M 385 786 L 485 786" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-plugin-assembly-teal)"/>
+<path d="M 765 786 L 865 786" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-plugin-assembly-teal)"/>
+<path d="M 230 827 L 230 859 L 1030 859 L 1030 827" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#03-plugin-assembly-blue)"/>
+<rect x="490.4" y="845" width="279.2" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="630" y="858" font-size="14" font-weight="400" text-anchor="middle" style="fill:#315bd6">标准对话、工具与权限仍由原生 DSH 负责</text>
+<text x="35" y="935" font-size="16" font-weight="400" text-anchor="start" style="fill:#617088">普通工具无需依赖 ARC；dsh-arc-tui 是另一种同进程命令集成，不是完整投切的必装组件。</text>
+</svg>

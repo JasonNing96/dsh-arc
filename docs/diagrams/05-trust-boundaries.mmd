@@ -1,0 +1,27 @@
+flowchart LR
+  subgraph L["本地信任边界 · Home"]
+    MAIL["选定邮件 / 私有背景"]
+    SCOPE["划定子任务与可外发材料"]
+    FINAL["核对云结果；完成本地文书"]
+    LA["记录委派依据、实际交付、结果采用"]
+    MAIL --> SCOPE
+    FINAL --> LA
+  end
+  subgraph C["云端信任边界 · 协作 runtime"]
+    TASK["承接范围内调研"]
+    SEARCH["获准的公开搜索"]
+    RESULT["结果、引用与执行记录"]
+    TASK --> SEARCH
+    SEARCH --> RESULT
+  end
+  subgraph B["设备 B 信任边界"]
+    GATE["检查任务、请求方、资源与接收方"]
+    DB["本地工程数据库 / 查询工具"]
+    OUT["结果出站检查与审计"]
+    GATE --> DB
+    DB --> OUT
+  end
+  SCOPE -->|"限定问题 + 获准材料"| TASK
+  TASK -->|"另行申请工程信息"| GATE
+  OUT -->|"只返回获准结果"| TASK
+  RESULT -->|"回收子任务产物"| FINAL

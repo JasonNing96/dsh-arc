@@ -1,0 +1,30 @@
+flowchart TB
+  subgraph W["电脑 · 工作台进程"]
+    UI["TUI 扩展版 + ARC driver：输入、草稿、增量展示"]
+    CTRL["ArcController：执行端选择与投切提交"]
+    STORE["StateStore：会话镜像、草稿、活动索引"]
+    UI -->|"投切 / 重连 / 端点绑定"| CTRL
+    CTRL -->|"持久化逻辑会话、Home、当前端"| STORE
+  end
+  subgraph L["电脑 · 独立 DSH runtime"]
+    LACP["标准 ACP + dsh-arc-acp"]
+    LARC["dsh-arc：ctx.arc"]
+    LAG["本地 Agent / Session / Persistence"]
+    LENV["本地工具、工作区、模型路由"]
+    LACP -->|"普通对话 / 权限交互"| LAG
+    LACP -->|"检查点请求"| LARC
+    LARC -->|"导出 / 暂存"| LAG
+    LAG --> LENV
+  end
+  subgraph R["服务器 · 独立 DSH runtime"]
+    RACP["标准 ACP + dsh-arc-acp"]
+    RARC["dsh-arc：ctx.arc"]
+    RAG["服务器 Agent / Session / Persistence"]
+    RENV["服务器工具、工作区、模型路由"]
+    RACP -->|"普通对话 / 权限交互"| RAG
+    RACP -->|"检查点请求"| RARC
+    RARC -->|"导出 / 暂存"| RAG
+    RAG --> RENV
+  end
+  CTRL <-->|"AcpClient · 本地 stdio"| LACP
+  CTRL <-->|"AcpClient · SSH stdio"| RACP

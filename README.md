@@ -7,6 +7,13 @@ Each runtime executes its own tools with its own model configuration.
 Version 1.0.0 packages the tested runtime and required native components. The full
 archive is about 128 MB; no model weights are included.
 
+## Design and source navigation
+
+See the [design note / 设计总稿](docs/design.md), [offline illustrated copy](docs/design.html),
+[five editable diagrams](docs/diagrams/README.md), [design history](docs/history.md),
+and [repository map](docs/repository-map.md). The design note separates v1.0 behavior
+from future collaboration, authorization and information-state research.
+
 ## Native installation
 
 The npm registry upload is pending. Native installation is currently available from

@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1110" viewBox="0 0 1280 1110" role="img" aria-labelledby="05-trust-boundaries-title">
+<title id="05-trust-boundaries-title">05  受限委派｜每个资源边界独立检查</title>
+<style>text{font-family:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;fill:#1b2b45} .small{fill:#617088}</style>
+<rect width="1280" height="100%" fill="#fff"/>
+<defs>
+<marker id="05-trust-boundaries-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#315bd6"/></marker>
+<marker id="05-trust-boundaries-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#087f83"/></marker>
+<marker id="05-trust-boundaries-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#66758d"/></marker>
+<marker id="05-trust-boundaries-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7c55bb"/></marker>
+</defs>
+<text x="30" y="40" font-size="24" font-weight="650" text-anchor="start">05  受限委派｜每个资源边界独立检查</text>
+<text x="30" y="69" font-size="15" font-weight="400" text-anchor="start" style="fill:#617088">目标场景 · 本地邮件工作保持 Home；云只承接获准调研；设备 B 自行决定可返回的信息。</text>
+<rect x="30" y="105" width="380" height="875" rx="16" fill="#f8fafd" stroke="#ced8e8" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text x="50" y="134" font-size="18" font-weight="600" text-anchor="start">本地 · Home 信任边界</text>
+<rect x="450" y="105" width="380" height="875" rx="16" fill="#f8fafd" stroke="#ced8e8" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text x="470" y="134" font-size="18" font-weight="600" text-anchor="start">云 · 协作 runtime 边界</text>
+<rect x="870" y="105" width="380" height="875" rx="16" fill="#f8fafd" stroke="#ced8e8" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text x="890" y="134" font-size="18" font-weight="600" text-anchor="start">设备 B · 资源边界</text>
+<rect x="55" y="188" width="330" height="82" rx="10" fill="#ffffff" stroke="#ccd5e3" stroke-width="1.4"/>
+<text x="220.0" y="223.5" font-size="18" font-weight="600" text-anchor="middle">选定邮件 / 私有背景</text>
+<text x="220.0" y="246.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">登录状态不等于全量读取授权</text>
+<rect x="55" y="350" width="330" height="92" rx="10" fill="#eaf8f6" stroke="#8ecdc6" stroke-width="1.4"/>
+<text x="220.0" y="390.5" font-size="18" font-weight="600" text-anchor="middle">划定子任务与外发材料</text>
+<text x="220.0" y="413.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">限定问题、字段与接收方</text>
+<rect x="475" y="350" width="330" height="92" rx="10" fill="#eef3ff" stroke="#9eb6f1" stroke-width="1.4"/>
+<text x="640.0" y="390.5" font-size="18" font-weight="600" text-anchor="middle">承接范围内调研</text>
+<text x="640.0" y="413.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">保留主任务 Home</text>
+<rect x="475" y="530" width="330" height="82" rx="10" fill="#ffffff" stroke="#ccd5e3" stroke-width="1.4"/>
+<text x="640.0" y="565.5" font-size="18" font-weight="600" text-anchor="middle">获准公开搜索</text>
+<text x="640.0" y="588.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">搜索词也需要出站范围检查</text>
+<rect x="895" y="350" width="330" height="92" rx="10" fill="#f5effc" stroke="#c6afe5" stroke-width="1.4"/>
+<text x="1060.0" y="390.5" font-size="18" font-weight="600" text-anchor="middle">独立授权检查</text>
+<text x="1060.0" y="413.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">任务 / 请求方 / 资源 / 接收方</text>
+<rect x="895" y="530" width="330" height="82" rx="10" fill="#ffffff" stroke="#ccd5e3" stroke-width="1.4"/>
+<text x="1060.0" y="565.5" font-size="18" font-weight="600" text-anchor="middle">工程数据库 / 查询工具</text>
+<text x="1060.0" y="588.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">确定性权限限制实际访问</text>
+<rect x="895" y="698" width="330" height="82" rx="10" fill="#eaf8f6" stroke="#8ecdc6" stroke-width="1.4"/>
+<text x="1060.0" y="733.5" font-size="18" font-weight="600" text-anchor="middle">结果出站检查</text>
+<text x="1060.0" y="756.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">记录获准范围与实际交付对象</text>
+<rect x="475" y="825" width="330" height="92" rx="10" fill="#ffffff" stroke="#ccd5e3" stroke-width="1.4"/>
+<text x="640.0" y="865.5" font-size="18" font-weight="600" text-anchor="middle">调研结果与引用</text>
+<text x="640.0" y="888.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">关联执行记录、返回本地</text>
+<rect x="55" y="825" width="330" height="92" rx="10" fill="#ffffff" stroke="#ccd5e3" stroke-width="1.4"/>
+<text x="220.0" y="865.5" font-size="18" font-weight="600" text-anchor="middle">核对结果，完成本地文书</text>
+<text x="220.0" y="888.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">结合未外发的私有背景</text>
+<path d="M 220 270 L 220 350" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#05-trust-boundaries-blue)"/>
+<path d="M 385 396 L 475 396" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#05-trust-boundaries-teal)"/>
+<rect x="376.5" y="313" width="107.0" height="21" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="430" y="325" font-size="13" font-weight="400" text-anchor="middle" style="fill:#087f83">仅交付获准材料</text>
+<path d="M 640 442 L 640 530" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#05-trust-boundaries-blue)"/>
+<path d="M 640 612 L 640 825" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#05-trust-boundaries-blue)"/>
+<path d="M 735 350 L 735 295 L 1060 295 L 1060 350" fill="none" stroke="#7c55bb" stroke-width="2" stroke-linejoin="round" marker-end="url(#05-trust-boundaries-purple)"/>
+<rect x="856.0" y="272" width="128.0" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="920" y="285" font-size="14" font-weight="400" text-anchor="middle" style="fill:#7c55bb">另行申请工程信息</text>
+<path d="M 1060 442 L 1060 530" fill="none" stroke="#7c55bb" stroke-width="2" stroke-linejoin="round" marker-end="url(#05-trust-boundaries-purple)"/>
+<path d="M 1060 612 L 1060 698" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#05-trust-boundaries-teal)"/>
+<path d="M 895 739 L 840 739 L 840 476 L 735 476 L 735 442" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#05-trust-boundaries-teal)"/>
+<rect x="800.0" y="656" width="68.0" height="21" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="834" y="668" font-size="13" font-weight="400" text-anchor="middle" style="fill:#087f83">获准结果</text>
+<path d="M 475 871 L 385 871" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#05-trust-boundaries-teal)"/>
+<rect x="376.5" y="792" width="107.0" height="21" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="430" y="804" font-size="13" font-weight="400" text-anchor="middle" style="fill:#087f83">回收结果与引用</text>
+<text x="220" y="954" font-size="14" font-weight="400" text-anchor="middle" style="fill:#617088">本地记录：依据 / 交付 / 采用</text>
+<text x="640" y="954" font-size="14" font-weight="400" text-anchor="middle" style="fill:#617088">云端记录：承接 / 工具 / 来源</text>
+<text x="1060" y="954" font-size="14" font-weight="400" text-anchor="middle" style="fill:#617088">B 端记录：访问 / 判断 / 出站</text>
+<rect x="30" y="1004" width="1220" height="72" rx="10" fill="#f4f6fa" stroke="#d9e0ea" stroke-width="1.4"/>
+<text x="640.0" y="1034.5" font-size="18" font-weight="600" text-anchor="middle">读取、处理、外发、保存、转委派分别授权</text>
+<text x="640.0" y="1057.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">Home 权限不自动传给云；多层审计不自动等于防篡改证明</text>
+</svg>

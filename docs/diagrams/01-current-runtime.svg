@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="900" viewBox="0 0 1280 900" role="img" aria-labelledby="01-current-runtime-title">
+<title id="01-current-runtime-title">01  当前运行架构｜工作台控制，两端执行</title>
+<style>text{font-family:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;fill:#1b2b45} .small{fill:#617088}</style>
+<rect width="1280" height="100%" fill="#fff"/>
+<defs>
+<marker id="01-current-runtime-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#315bd6"/></marker>
+<marker id="01-current-runtime-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#087f83"/></marker>
+<marker id="01-current-runtime-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#66758d"/></marker>
+<marker id="01-current-runtime-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7c55bb"/></marker>
+</defs>
+<text x="30" y="40" font-size="24" font-weight="650" text-anchor="start">01  当前运行架构｜工作台控制，两端执行</text>
+<text x="30" y="69" font-size="15" font-weight="400" text-anchor="start" style="fill:#617088">v1.0 已验收 · TUI 执行驱动组织控制面；ACP 承载消息、事件和检查点，各端独立执行</text>
+<rect x="30" y="96" width="1220" height="235" rx="16" fill="#f8fafd" stroke="#ced8e8" stroke-width="1.5"/>
+<text x="50" y="125" font-size="18" font-weight="600" text-anchor="start">电脑 · 工作台进程</text>
+<rect x="60" y="172" width="300" height="105" rx="10" fill="#ffffff" stroke="#ccd5e3" stroke-width="1.4"/>
+<text x="210.0" y="207.5" font-size="18" font-weight="600" text-anchor="middle">TUI 扩展版 + ARC driver</text>
+<text x="210.0" y="230.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">输入与草稿</text>
+<text x="210.0" y="253.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">增量、工具与权限展示</text>
+<rect x="470" y="172" width="320" height="105" rx="10" fill="#eef3ff" stroke="#9eb6f1" stroke-width="1.4"/>
+<text x="630.0" y="207.5" font-size="18" font-weight="600" text-anchor="middle">ArcController</text>
+<text x="630.0" y="230.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">当前执行端 / 投切事务</text>
+<text x="630.0" y="253.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">逻辑 conversationId / Home</text>
+<rect x="925" y="172" width="290" height="105" rx="10" fill="#eaf8f6" stroke="#8ecdc6" stroke-width="1.4"/>
+<text x="1070.0" y="207.5" font-size="18" font-weight="600" text-anchor="middle">StateStore</text>
+<text x="1070.0" y="230.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">会话镜像与草稿</text>
+<text x="1070.0" y="253.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">活动指针 active.json</text>
+<path d="M 360 225 L 470 225" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-current-runtime-blue)"/>
+<rect x="370.1" y="198" width="89.8" height="21" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="415" y="210" font-size="13" font-weight="400" text-anchor="middle" style="fill:#315bd6">投切 / 绑定</text>
+<path d="M 790 225 L 925 225" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-current-runtime-teal)"/>
+<rect x="829.0" y="197" width="58.0" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="858" y="210" font-size="14" font-weight="400" text-anchor="middle" style="fill:#315bd6">持久化</text>
+<rect x="30" y="435" width="590" height="397" rx="16" fill="#f8fafd" stroke="#ced8e8" stroke-width="1.5"/>
+<text x="50" y="464" font-size="18" font-weight="600" text-anchor="start">电脑 · 本地 DSH runtime</text>
+<rect x="660" y="435" width="590" height="397" rx="16" fill="#f8fafd" stroke="#ced8e8" stroke-width="1.5"/>
+<text x="680" y="464" font-size="18" font-weight="600" text-anchor="start">服务器 · DSH runtime</text>
+<rect x="60" y="500" width="530" height="68" rx="10" fill="#ffffff" stroke="#ccd5e3" stroke-width="1.4"/>
+<text x="325.0" y="528.5" font-size="18" font-weight="600" text-anchor="middle">标准 ACP + dsh-arc-acp</text>
+<text x="325.0" y="551.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">对话、取消、权限、ARC 扩展</text>
+<rect x="60" y="645" width="205" height="84" rx="10" fill="#eaf8f6" stroke="#8ecdc6" stroke-width="1.4"/>
+<text x="162.5" y="681.5" font-size="18" font-weight="600" text-anchor="middle">dsh-arc</text>
+<text x="162.5" y="704.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">ctx.arc · 检查点</text>
+<rect x="345" y="645" width="245" height="84" rx="10" fill="#eef3ff" stroke="#9eb6f1" stroke-width="1.4"/>
+<text x="467.5" y="681.5" font-size="18" font-weight="600" text-anchor="middle">本地 Agent / Session</text>
+<text x="467.5" y="704.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">原生持久化</text>
+<rect x="60" y="771" width="530" height="42" rx="10" fill="#f4f6fa" stroke="#d9e0ea" stroke-width="1.4"/>
+<text x="325.0" y="798.0" font-size="18" font-weight="600" text-anchor="middle">本地工具 / 工作区 / 模型路由</text>
+<path d="M 155 568 L 155 645" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-current-runtime-teal)"/>
+<rect x="126.0" y="598" width="58.0" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="155" y="611" font-size="14" font-weight="400" text-anchor="middle" style="fill:#315bd6">检查点</text>
+<path d="M 471 568 L 471 645" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-current-runtime-blue)"/>
+<rect x="409.2" y="598" width="123.5" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="471" y="611" font-size="14" font-weight="400" text-anchor="middle" style="fill:#315bd6">普通对话 / 授权</text>
+<path d="M 265 688 L 345 688" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-current-runtime-teal)"/>
+<rect x="262.9" y="661" width="84.2" height="20" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="305" y="672" font-size="12" font-weight="400" text-anchor="middle" style="fill:#315bd6">导出 / 暂存</text>
+<path d="M 470 729 L 470 771" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-current-runtime-blue)"/>
+<rect x="690" y="500" width="530" height="68" rx="10" fill="#ffffff" stroke="#ccd5e3" stroke-width="1.4"/>
+<text x="955.0" y="528.5" font-size="18" font-weight="600" text-anchor="middle">标准 ACP + dsh-arc-acp</text>
+<text x="955.0" y="551.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">对话、取消、权限、ARC 扩展</text>
+<rect x="690" y="645" width="205" height="84" rx="10" fill="#eaf8f6" stroke="#8ecdc6" stroke-width="1.4"/>
+<text x="792.5" y="681.5" font-size="18" font-weight="600" text-anchor="middle">dsh-arc</text>
+<text x="792.5" y="704.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">ctx.arc · 检查点</text>
+<rect x="975" y="645" width="245" height="84" rx="10" fill="#eef3ff" stroke="#9eb6f1" stroke-width="1.4"/>
+<text x="1097.5" y="681.5" font-size="18" font-weight="600" text-anchor="middle">服务器 Agent / Session</text>
+<text x="1097.5" y="704.5" font-size="15" font-weight="400" text-anchor="middle" style="fill:#55657e">原生持久化</text>
+<rect x="690" y="771" width="530" height="42" rx="10" fill="#f4f6fa" stroke="#d9e0ea" stroke-width="1.4"/>
+<text x="955.0" y="798.0" font-size="18" font-weight="600" text-anchor="middle">服务器工具 / 工作区 / 模型路由</text>
+<path d="M 785 568 L 785 645" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-current-runtime-teal)"/>
+<rect x="756.0" y="598" width="58.0" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="785" y="611" font-size="14" font-weight="400" text-anchor="middle" style="fill:#315bd6">检查点</text>
+<path d="M 1101 568 L 1101 645" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-current-runtime-blue)"/>
+<rect x="1039.2" y="598" width="123.5" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="1101" y="611" font-size="14" font-weight="400" text-anchor="middle" style="fill:#315bd6">普通对话 / 授权</text>
+<path d="M 895 688 L 975 688" fill="none" stroke="#087f83" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-current-runtime-teal)"/>
+<rect x="892.9" y="661" width="84.2" height="20" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="935" y="672" font-size="12" font-weight="400" text-anchor="middle" style="fill:#315bd6">导出 / 暂存</text>
+<path d="M 1100 729 L 1100 771" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-current-runtime-blue)"/>
+<path d="M 535 277 L 535 375 L 325 375 L 325 500" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-current-runtime-blue)" marker-start="url(#01-current-runtime-blue)"/>
+<rect x="239.4" y="358" width="185.1" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="332" y="371" font-size="14" font-weight="400" text-anchor="middle" style="fill:#315bd6">AcpClient · 本地 stdio</text>
+<path d="M 725 277 L 725 375 L 955 375 L 955 500" fill="none" stroke="#315bd6" stroke-width="2" stroke-linejoin="round" marker-end="url(#01-current-runtime-blue)" marker-start="url(#01-current-runtime-blue)"/>
+<rect x="870.7" y="358" width="180.6" height="22" rx="4" fill="#fff" fill-opacity=".98"/>
+<text x="961" y="371" font-size="14" font-weight="400" text-anchor="middle" style="fill:#315bd6">AcpClient · SSH stdio</text>
+<text x="35" y="866" font-size="16" font-weight="400" text-anchor="start" style="fill:#617088">请求与事件复用 ACP 连接；检查点经工作台中转。两端没有后台全量同步链路。</text>
+</svg>
