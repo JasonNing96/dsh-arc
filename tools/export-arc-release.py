@@ -18,7 +18,7 @@ for path in ['tui/src','tui/test','tui/community','tui/package.json','tui/packag
  copy(pathlib.Path(path))
 # Only the reviewed public documentation set is eligible, never private research trees.
 docs_source=(a.docs_source or ROOT/'docs').resolve()
-public_docs=['README.md','design.md','design.html','history.md','repository-map.md','diagrams/README.md','diagrams/render.py']
+public_docs=['README.md','usage.md','design.md','design.html','history.md','repository-map.md','diagrams/README.md','diagrams/render.py']
 for name in ['01-current-runtime','02-handoff-sequence','03-plugin-assembly','04-target-architecture','05-trust-boundaries']:
  for ext in ['svg','mmd']:public_docs.append(f'diagrams/{name}.{ext}')
 for name in public_docs:

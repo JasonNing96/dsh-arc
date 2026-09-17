@@ -6,7 +6,7 @@
 - [图形资产](diagrams/README.md)：五张 SVG 与对应 Mermaid 源码。
 - [设计沿革](history.md)：解释从三端设想到 v1.0 插件分发的取舍。
 - [仓库导航](repository-map.md)：从需求找到源码、构建工具与配置。
-- [安装与使用](../README.md)、[源码构建](../BUILDING.md)、[验收范围](../VALIDATION.md)。
+- [安装与使用](usage.md)、[源码构建](../BUILDING.md)、[验收范围](../VALIDATION.md)。
 
 设计总稿是当前文档基线；历史记录保存当时结论，不覆盖后来的实现证据。修改运行行为时同步修改相关章节和图形，未来方案必须明确标识。
 

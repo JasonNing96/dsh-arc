@@ -13,11 +13,13 @@ const names = ['01-current-runtime', '02-handoff-sequence', '03-plugin-assembly'
 const escape = value => value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
 let figureIndex = 0;
 let input = readFileSync(join(root, 'docs/design.md'), 'utf8').replace(/^# .*\n/, '');
-input = input.replace(/!\[([^\]]*)\]\(diagrams\/([^)]+)\.svg\)/g, (_, alt, name) => {
-  if (name !== names[figureIndex++]) throw new Error('Diagram order mismatch: ' + name);
+input = input.replace(/```mermaid\n([\s\S]*?)```/g, (_, block) => {
+  const name = names[figureIndex++];
+  if (!name) throw new Error('Unexpected Mermaid diagram');
   const svg = readFileSync(join(root, 'docs/diagrams', name + '.svg'), 'utf8');
   const source = readFileSync(join(root, 'docs/diagrams', name + '.mmd'), 'utf8');
-  return `<figure id="${name}"><div class="diagram">${svg}</div><figcaption>${escape(alt)} · <a href="diagrams/${name}.svg">SVG</a> · <a href="diagrams/${name}.mmd">Mermaid</a></figcaption><details><summary>可编辑连线源码</summary><pre><code>${escape(source)}</code></pre></details></figure>\n\n`;
+  if (block.trim() !== source.trim()) throw new Error('Mermaid source mismatch: ' + name);
+  return `<figure id="${name}"><div class="diagram">${svg}</div><figcaption>图 ${figureIndex} · <a href="diagrams/${name}.svg">SVG</a> · <a href="diagrams/${name}.mmd">Mermaid</a></figcaption><details><summary>可编辑连线源码</summary><pre><code>${escape(source)}</code></pre></details></figure>\n\n`;
 });
 if (figureIndex !== names.length) throw new Error('Expected five diagrams');
 let content = marked.parse(input);

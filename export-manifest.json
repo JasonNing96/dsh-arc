@@ -38,6 +38,7 @@
     "docs/diagrams/render.py",
     "docs/history.md",
     "docs/repository-map.md",
+    "docs/usage.md",
     "plugins/dsh-arc-acp/LICENSE",
     "plugins/dsh-arc-acp/README.md",
     "plugins/dsh-arc-acp/cordis.patch.yml",

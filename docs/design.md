@@ -40,7 +40,40 @@ ARC 负责组织这些 runtime 如何延续工作。DSH 继续负责 Agent、模
 
 ## 3. v1.0 控制面与数据面
 
-![v1.0 当前运行架构：工作台控制，两端独立执行](diagrams/01-current-runtime.svg)
+```mermaid
+flowchart TB
+  subgraph W["电脑 · 工作台进程"]
+    UI["TUI 扩展版 + ARC driver：输入、草稿、增量展示"]
+    CTRL["ArcController：执行端选择与投切提交"]
+    STORE["StateStore：会话镜像、草稿、活动索引"]
+    UI -->|"投切 / 重连 / 端点绑定"| CTRL
+    CTRL -->|"持久化逻辑会话、Home、当前端"| STORE
+  end
+  subgraph L["电脑 · 独立 DSH runtime"]
+    LACP["标准 ACP + dsh-arc-acp"]
+    LARC["dsh-arc：ctx.arc"]
+    LAG["本地 Agent / Session / Persistence"]
+    LENV["本地工具、工作区、模型路由"]
+    LACP -->|"普通对话 / 权限交互"| LAG
+    LACP -->|"检查点请求"| LARC
+    LARC -->|"导出 / 暂存"| LAG
+    LAG --> LENV
+  end
+  subgraph R["服务器 · 独立 DSH runtime"]
+    RACP["标准 ACP + dsh-arc-acp"]
+    RARC["dsh-arc：ctx.arc"]
+    RAG["服务器 Agent / Session / Persistence"]
+    RENV["服务器工具、工作区、模型路由"]
+    RACP -->|"普通对话 / 权限交互"| RAG
+    RACP -->|"检查点请求"| RARC
+    RARC -->|"导出 / 暂存"| RAG
+    RAG --> RENV
+  end
+  CTRL <-->|"AcpClient · 本地 stdio"| LACP
+  CTRL <-->|"AcpClient · SSH stdio"| RACP
+```
+
+[静态矢量图：v1.0 当前运行架构：工作台控制，两端独立执行](diagrams/01-current-runtime.svg)
 
 [编辑图 1 的 Mermaid 源码](diagrams/01-current-runtime.mmd)
 
@@ -63,7 +96,30 @@ ARC 负责组织这些 runtime 如何延续工作。DSH 继续负责 Agent、模
 
 ## 4. 一次投切如何完成
 
-![投切时序：目标准备成功后提交活动指针](diagrams/02-handoff-sequence.svg)
+```mermaid
+sequenceDiagram
+  participant U as TUI / 用户
+  participant C as ARC 控制器
+  participant L as 源 runtime
+  participant R as 目标 runtime
+  participant I as 本地活动索引
+  U->>C: 请求投切
+  Note over U,C: 要求空闲且无待决权限；保留源端与草稿
+  C->>R: 连接、初始化与能力检查
+  C->>L: 导出当前 session 检查点
+  L-->>C: 持久化屏障后的模型可见消息
+  C->>R: 暂存检查点并恢复新原生 session
+  R-->>C: 目标 sessionId 与连接状态
+  Note over C,R: 此时仍未切换可见执行端，也未发送新 prompt
+  C->>I: 保存最终草稿、镜像和活动指针
+  Note over C,I: 提交边界：活动指针持久化后发布目标端
+  C-->>U: 显示目标端；逻辑会话、Home、草稿延续
+  U->>C: 发送下一条输入
+  C->>R: prompt；返回增量、工具与权限事件
+  Note over U,R: 提交前失败：保留源端；提交后断连：按已提交端恢复，不能宣称自动撤销
+```
+
+[静态矢量图：投切时序：目标准备成功后提交活动指针](diagrams/02-handoff-sequence.svg)
 
 [编辑图 2 的 Mermaid 源码](diagrams/02-handoff-sequence.mmd)
 
@@ -97,7 +153,23 @@ ARC 负责组织这些 runtime 如何延续工作。DSH 继续负责 Agent、模
 
 ## 5. 插件如何组装，哪些还需要适配
 
-![插件组装：TUI 执行接口、ARC driver 与 runtime Bundle](diagrams/03-plugin-assembly.svg)
+```mermaid
+flowchart TB
+  subgraph UI["工作台 Profile：arc-ui；配套 TUI 0.10.1-arc.1.0.0"]
+    T["TUI 编辑器与流式展示"] --> PORT["通用会话执行接口"]
+    PORT --> N["默认原生驱动（未启用 ARC）"]
+    PORT -->|"driverId: arc"| D["可选 dsh-arc-execution"]
+    D --> C["ArcController + StateStore：逻辑会话、Home、草稿、提交"]
+  end
+  subgraph RT["两个独立 runtime Profile：本地与远端 arc-runtime"]
+    ACP["标准 ACP + dsh-arc-acp"] --> CORE["dsh-arc：ctx.arc"]
+    CORE -->|"检查点导出与导入"| S["原生 Agent / Session / Tools"]
+    ACP -->|"普通对话与工具权限"| S
+  end
+  C <-->|"本地 stdio / SSH stdio"| ACP
+```
+
+[静态矢量图：插件组装：TUI 执行接口、ARC driver 与 runtime Bundle](diagrams/03-plugin-assembly.svg)
 
 [编辑图 3 的 Mermaid 源码](diagrams/03-plugin-assembly.mmd)
 
@@ -124,7 +196,7 @@ DSH 用 Cordis 服务、Bundle 元数据和 Profile 组合工作台。ARC 核心
 
 ### 使用分发器组装
 
-在本地和服务器分别安装同版发行包、初始化各自模型；命令示例见 [README](../README.md)。模型凭据各端分别提供。随后本地执行：
+在本地和服务器分别安装同版发行包、初始化各自模型；完整命令示例见 [安装与使用](usage.md)。模型凭据各端分别提供。随后本地执行：
 
 ```sh
 dsh-arc remote add my-server --workspace /absolute/server/project
@@ -159,7 +231,30 @@ Docker 是同一 runtime 的部署方式：通过 SSH 启动 `docker run --rm -i
 
 ## 7. 目标架构：多端协同，一个会话
 
-![目标多端架构：云同步和云执行分别组织](diagrams/04-target-architecture.svg)
+```mermaid
+flowchart TB
+  U["一个用户：电脑 / 手机 / 自定义工作台"]
+  ARC["ARC 协作契约：Home、承接关系、信息范围、授权与审计关联"]
+  U -.-> ARC
+  L["电脑 runtime：可作为 Home；本地工具与现场信息"]
+  C["个人云 runtime：可作为 Home；云端任务与计算"]
+  B["设备 B runtime：独立资源授权与查询工具"]
+  ARC -.->|"投切 / 有边界的委派"| L
+  ARC -.->|"投切 / 有边界的委派"| C
+  ARC -.->|"受限资源请求"| B
+  LM["本地或在线模型 provider"]
+  CM["云端模型 provider"]
+  DB["工程资料 / 数据库"]
+  L -.-> LM
+  C -.-> CM
+  B -.-> DB
+  SYNC["可选同步服务：获准对话、工作记录、关键资产与版本"]
+  L -.->|"按数据策略同步"| SYNC
+  C -.->|"按数据策略同步"| SYNC
+  U -.->|"查看获准同步内容"| SYNC
+```
+
+[静态矢量图：目标多端架构：云同步和云执行分别组织](diagrams/04-target-architecture.svg)
 
 [编辑图 4 的 Mermaid 源码](diagrams/04-target-architecture.mmd)
 
@@ -176,7 +271,37 @@ Docker 是同一 runtime 的部署方式：通过 SSH 启动 `docker run --rm -i
 
 ## 8. Home、最小信息交付与审计
 
-![目标信任边界：本地邮件、云端调研与设备 B](diagrams/05-trust-boundaries.svg)
+```mermaid
+flowchart LR
+  subgraph L["本地信任边界 · Home"]
+    MAIL["选定邮件 / 私有背景"]
+    SCOPE["划定子任务与可外发材料"]
+    FINAL["核对云结果；完成本地文书"]
+    LA["记录委派依据、实际交付、结果采用"]
+    MAIL --> SCOPE
+    FINAL --> LA
+  end
+  subgraph C["云端信任边界 · 协作 runtime"]
+    TASK["承接范围内调研"]
+    SEARCH["获准的公开搜索"]
+    RESULT["结果、引用与执行记录"]
+    TASK --> SEARCH
+    SEARCH --> RESULT
+  end
+  subgraph B["设备 B 信任边界"]
+    GATE["检查任务、请求方、资源与接收方"]
+    DB["本地工程数据库 / 查询工具"]
+    OUT["结果出站检查与审计"]
+    GATE --> DB
+    DB --> OUT
+  end
+  SCOPE -->|"限定问题 + 获准材料"| TASK
+  TASK -->|"另行申请工程信息"| GATE
+  OUT -->|"只返回获准结果"| TASK
+  RESULT -->|"回收子任务产物"| FINAL
+```
+
+[静态矢量图：目标信任边界：本地邮件、云端调研与设备 B](diagrams/05-trust-boundaries.svg)
 
 [编辑图 5 的 Mermaid 源码](diagrams/05-trust-boundaries.mmd)
 

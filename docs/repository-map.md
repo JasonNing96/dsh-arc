@@ -4,13 +4,14 @@
 
 ```text
 dsh-arc/
-  README.md                    安装、启动、SSH / Docker、升级与使用范围
+  README.md                    产品概览、连线图、快速开始与文档入口
   BUILDING.md                  从锁定源码构建发行包
   VALIDATION.md                验收平台、证据范围与限制
   LICENSE                      项目许可证
   THIRD_PARTY_NOTICES.md        上游来源和 TUI 扩展版本说明
   docs/
     README.md                  文档入口
+    usage.md                   详细安装、SSH / Docker、交互和升级
     design.md                  当前设计总稿（内容原稿）
     design.html                自包含离线图文版（生成产物）
     history.md                 设计沿革与被替代的旧操作

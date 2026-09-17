@@ -8,7 +8,7 @@
 | 04：多端、个人云与同步职责 | 目标设计 | [SVG](04-target-architecture.svg) | [Mermaid](04-target-architecture.mmd) |
 | 05：Home、云与设备 B 的信任边界 | 目标设计 | [SVG](05-trust-boundaries.svg) | [Mermaid](05-trust-boundaries.mmd) |
 
-Markdown 引用 SVG，保证 GitHub 和本地阅读器不因 Mermaid 支持不同而丢图。SVG 使用人工布局，Mermaid 保存可编辑的关系；两者修改时共同核对。`design.html` 内嵌 SVG，可离线查看，手机窄屏可横向滚动大图。
+GitHub 的 README 与设计总稿使用原生 Mermaid 连线图，随阅读界面呈现。每张图保留 SVG 链接，供不支持 Mermaid 的阅读器使用。SVG 使用人工布局，Mermaid 保存可编辑的关系；两者修改时共同核对。总稿中的 Mermaid 与对应 `.mmd` 必须保持一致，HTML 构建器会校验。`design.html` 内嵌 SVG，可离线查看，手机窄屏可横向滚动大图。
 
 从仓库根目录生成：
 
