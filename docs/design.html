@@ -14,7 +14,7 @@ h2{font-size:29px;line-height:1.45;margin:55px 0 24px;padding-top:18px;border-to
 @media(max-width:700px){body{font-size:16px}main{width:100%;margin:0;border-radius:0}.cover{padding:34px 24px}.cover h1{font-size:48px}.cover .lead{font-size:23px}.content{padding:4px 23px 30px}.meta,.footer{padding:17px 24px}h2{font-size:25px}figure{margin-left:-12px;margin-right:-12px}.table-wrap{margin-right:-10px}}
 @media print{body{background:#fff;font-size:11pt}nav,details{display:none}main{margin:0;width:100%;max-width:none;box-shadow:none;transform:none!important}.cover{padding:28px;color:#172840;background:#eef3fb;break-after:avoid}.cover h1{font-size:38px}.cover .english,.cover .eyebrow{color:#526780}.cover .lead{font-size:20px}.chips{display:none}.content{padding:0 20px}.meta,.footer{padding:14px 20px}h2{font-size:20px;break-after:avoid;margin-top:28px}h3{break-after:avoid}.diagram svg{min-width:0}figure{margin:15px 0;break-inside:avoid}table{font-size:9pt}.table-wrap{overflow:visible}tr{break-inside:avoid}a{color:inherit}.source{font-size:8pt}}
 </style></head><body>
-<nav><strong>DSH ARC</strong><small>设计总稿 · v1.0<br>2026-09-17</small><div class="toc"><a href="#section-1">1. 产品为什么需要 ARC</a>
+<nav><strong>DSH ARC</strong><small>设计总稿 · v1.0<br>2026-09-18</small><div class="toc"><a href="#section-1">1. 产品为什么需要 ARC</a>
 <a href="#section-2">2. 五个必须分开的概念</a>
 <a href="#section-3">3. v1.0 控制面与数据面</a>
 <a href="#section-4">4. 一次投切如何完成</a>
@@ -28,7 +28,7 @@ h2{font-size:29px;line-height:1.45;margin:55px 0 24px;padding-top:18px;border-to
 <main><header class="cover"><div class="eyebrow">ARCHITECTURE NOTE / 2026.09</div><h1>DSH ARC</h1><p class="english">Agent Relay Control</p><p class="lead">工作有归属，执行可接力。<br>多个独立 runtime，延续同一个会话。</p><div class="chips"><span>小核心 · 明确边界</span><span>控制面 / 数据面</span><span>可选插件 · 独立运行时</span><span>5 张架构图</span></div></header>
 <div class="meta">产品与架构评审稿 · 源码与既有验收整合 · 已实现、后续目标、开放研究分别标注<br>本页内嵌全部矢量图，无需 Figma 权限或在线图表服务即可阅读。</div>
 <article class="content"><blockquote>
-<p>Agent Relay Control · v1.0 设计基线 · 2026-09-17</p>
+<p>Agent Relay Control · v1.0 实现基线 · 文档修订 2026-09-18</p>
 <p>工作有归属，执行可接力。多个独立 runtime，延续同一个会话。</p>
 <p>本文整合早期三端 PRD、端云接力讨论、Home Runtime 设计、插件验证与 TUI 迁移结果，并以 v1.0 源码修正历史状态。它是架构参考，后续目标不是本版功能承诺。</p>
 </blockquote>
@@ -815,12 +815,13 @@ dsh-arc --workspace /absolute/local/project
 <h2 id="section-11">11. 当前验收与下一阶段入口</h2>
 <p>v1.0 已有：本地/SSH 两端独立 runtime、流式展示、空闲投切、上下文/草稿/Home 保留、重连、重启恢复、插件分层、原生与 Docker 分发。2026-09-17 用户确认本机手工测试通过；自动化范围和运行平台见 <a href="../VALIDATION.md">VALIDATION</a>。用户确认不扩大为未执行的平台或功能验收。</p>
 <p>尚未实现：多设备同时写入、移动 runtime、托管同步服务、Home 迁移、受限子任务委派、跨端文件/Git 自动同步、细粒度授权与可验证审计、断连后独立长程执行、其他 harness 的通用接入。</p>
-<p>后续工作可以围绕三个具体交付推进，尚未排期：</p>
+<p>下一阶段产品目标已确认为 <strong>自主接入与可靠接续</strong>：接入自己的独立 runtime，明确知道执行位置、交付范围与失败后的恢复位置。具体实现和分期尚未冻结。</p>
 <ol>
-<li>完善插件执行契约与版本兼容矩阵，降低新界面的接入成本。</li>
-<li>用“本地选定邮件 → 云端公开调研 → 本地回收结果”验证受限委派，先定义材料范围、接收方、提交与审计，再实现协议。</li>
-<li>为信息状态同步建立独立基准，比较保真、权限和成本，不让研究假设悄悄变成 v1 的隐含承诺。</li>
+<li>优先解决稳定环境身份、多端登记、连接与能力检查、重复请求及断连后的恢复；先对照 <code>dsh-distribution</code> 与 <code>dsh-std</code> 的边界。</li>
+<li>用 TUI 和第二个调用者验证执行接口可复用，沉淀真实跨 runtime 接力案例与公共接口缺口。</li>
+<li>受限委派保留为后续方向；信息状态同步单独建立研究基准，不把它们提前扩入当前投切保证。</li>
 </ol>
+<p>实施建议、候选命令与验收出口见 <a href="next-stage.md">下一阶段技术路线</a>；已确认的定位见 <a href="community-direction.md">社区贡献方向</a>，证据和参与规则见 <a href="research/dsh-community-contribution-2026-09-17.md">社区调查</a>。</p>
 <p>新增 PRD 应逐条说明用户目的、前置条件、Home/执行/推理位置、数据范围、正常与异常流程、兼容依赖、验收证据和目标版本；分别标记“已实现”“已确认方向”“候选方案”“开放课题”。历史演变见 <a href="history.md">设计沿革</a>。</p>
 </article>
-<footer class="footer">DSH ARC Design v1.0 · 2026-09-17 · Markdown 为内容原稿，SVG 为离线图形资产。<br>状态是有日期的证据快照；最新迁移结论以项目独立验收记录为准。</footer></main></body></html>
+<footer class="footer">DSH ARC Design v1.0 · 2026-09-18 · Markdown 为内容原稿，SVG 为离线图形资产。<br>状态是有日期的证据快照；最新迁移结论以项目独立验收记录为准。</footer></main></body></html>

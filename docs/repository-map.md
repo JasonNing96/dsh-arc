@@ -14,6 +14,9 @@ dsh-arc/
     usage.md                   详细安装、SSH / Docker、交互和升级
     design.md                  当前设计总稿（内容原稿）
     design.html                自包含离线图文版（生成产物）
+    next-stage.md              自主接入与可靠接续：候选方案、验收出口
+    community-direction.md     已确认的社区贡献目标
+    research/                  日期化社区接口与桌面客户端调查
     history.md                 设计沿革与被替代的旧操作
     repository-map.md          本文件
     diagrams/                  SVG、Mermaid 源码及渲染脚本
@@ -58,4 +61,6 @@ dsh-arc/
 
 ## 文档维护
 
-正文改 `docs/design.md`，连线语义改对应 `.mmd`，静态布局改 `docs/diagrams/render.py`。SVG 是人工布局的对应图，需核对与 Mermaid 关系一致。重新生成和校验的命令见 [图形说明](diagrams/README.md)。
+当前实现改 `docs/design.md`，已确认方向改 `docs/community-direction.md`，候选技术方案改 `docs/next-stage.md`；外部调查存入 `docs/research/` 并注明日期、来源与验证边界。新增公开文档同步导航和 `tools/export-arc-release.py` 白名单，避免后续导出遗漏。
+
+架构正文改 `docs/design.md`，连线语义改对应 `.mmd`，静态布局改 `docs/diagrams/render.py`。SVG 是人工布局的对应图，需核对与 Mermaid 关系一致。重新生成和校验的命令见 [图形说明](diagrams/README.md)。

@@ -47,11 +47,11 @@ h2{font-size:29px;line-height:1.45;margin:55px 0 24px;padding-top:18px;border-to
 @media(max-width:700px){body{font-size:16px}main{width:100%;margin:0;border-radius:0}.cover{padding:34px 24px}.cover h1{font-size:48px}.cover .lead{font-size:23px}.content{padding:4px 23px 30px}.meta,.footer{padding:17px 24px}h2{font-size:25px}figure{margin-left:-12px;margin-right:-12px}.table-wrap{margin-right:-10px}}
 @media print{body{background:#fff;font-size:11pt}nav,details{display:none}main{margin:0;width:100%;max-width:none;box-shadow:none;transform:none!important}.cover{padding:28px;color:#172840;background:#eef3fb;break-after:avoid}.cover h1{font-size:38px}.cover .english,.cover .eyebrow{color:#526780}.cover .lead{font-size:20px}.chips{display:none}.content{padding:0 20px}.meta,.footer{padding:14px 20px}h2{font-size:20px;break-after:avoid;margin-top:28px}h3{break-after:avoid}.diagram svg{min-width:0}figure{margin:15px 0;break-inside:avoid}table{font-size:9pt}.table-wrap{overflow:visible}tr{break-inside:avoid}a{color:inherit}.source{font-size:8pt}}
 </style></head><body>
-<nav><strong>DSH ARC</strong><small>设计总稿 · v1.0<br>2026-09-17</small><div class="toc">${toc}</div><a href="design.md">Markdown 原稿 ↗</a></nav>
+<nav><strong>DSH ARC</strong><small>设计总稿 · v1.0<br>2026-09-18</small><div class="toc">${toc}</div><a href="design.md">Markdown 原稿 ↗</a></nav>
 <main><header class="cover"><div class="eyebrow">ARCHITECTURE NOTE / 2026.09</div><h1>DSH ARC</h1><p class="english">Agent Relay Control</p><p class="lead">工作有归属，执行可接力。<br>多个独立 runtime，延续同一个会话。</p><div class="chips"><span>小核心 · 明确边界</span><span>控制面 / 数据面</span><span>可选插件 · 独立运行时</span><span>5 张架构图</span></div></header>
 <div class="meta">产品与架构评审稿 · 源码与既有验收整合 · 已实现、后续目标、开放研究分别标注<br>本页内嵌全部矢量图，无需 Figma 权限或在线图表服务即可阅读。</div>
 <article class="content">${content}</article>
-<footer class="footer">DSH ARC Design v1.0 · 2026-09-17 · Markdown 为内容原稿，SVG 为离线图形资产。<br>状态是有日期的证据快照；最新迁移结论以项目独立验收记录为准。</footer></main></body></html>`;
+<footer class="footer">DSH ARC Design v1.0 · 2026-09-18 · Markdown 为内容原稿，SVG 为离线图形资产。<br>状态是有日期的证据快照；最新迁移结论以项目独立验收记录为准。</footer></main></body></html>`;
 const output = resolve(directory, '../../docs/design.html');
 writeFileSync(output, html, 'utf8');
 console.log(`Built ${output}: ${names.length} diagrams, ${headings.length} sections, no remote resources`);

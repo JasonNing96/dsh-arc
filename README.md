@@ -43,6 +43,7 @@ then use **`/arc switch`** (Alt+X) in the TUI.
 
 - [Installation & usage](docs/usage.md) — model setup, SSH, Docker, shortcuts and upgrades.
 - [Design & architecture / 设计总稿](docs/design.md) — diagrams, Home, boundaries and future work.
+- [Documentation index / 文档导航](docs/README.md) — roadmap, community direction and research.
 - [Build from source](BUILDING.md) · [Repository map](docs/repository-map.md) · [Validation](VALIDATION.md).
 
 The bundled TUI is the identified ARC extension `0.10.1-arc.1.0.0`.
